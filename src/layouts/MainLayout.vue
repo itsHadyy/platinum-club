@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+    <!-- <q-header elevated class="text-grey bg-white">
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
@@ -10,9 +10,9 @@
 
         <div>Quasar v{{ $q.version }}</div>
       </q-toolbar>
-    </q-header>
+    </q-header> -->
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
+    <q-drawer v-model="leftDrawerOpen" bordered>
       <q-list>
         <q-item-label header>
           Essential Links
@@ -27,10 +27,12 @@
     </q-page-container>
 
     <q-footer elevated>
-      <q-tabs dense active-color="primary" indicator-color="primary" class="bg-white text-grey" align="justify">
-        <q-route-tab to="/" icon="home" label="Home" />
-        <q-route-tab to="/profile" icon="account_circle" label="Profile" />
-        <q-route-tab to="/wallet" icon="account_balance_wallet" label="Wallet" />
+      <q-tabs dense active-color="primary" indicator-color="primary" class="bg-white text-grey q-pa-sm">
+        <q-route-tab to="/" icon="home" label="" />
+        <q-route-tab to="/profile" icon="account_circle" label="" />
+        <q-route-tab to="/wallet" icon="account_balance_wallet" label="" />
+        <q-route-tab to="/wallet" icon="notifications" label="" />
+        <q-route-tab icon="menu" label="" @click="toggleLeftDrawer" />
       </q-tabs>
     </q-footer>
   </q-layout>
