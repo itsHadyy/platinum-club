@@ -29,8 +29,8 @@
       <router-view />
     </q-page-container>
 
-    <q-footer elevated>
-      <div class="footer-nav">
+    <q-footer>
+      <div class="footer-nav" >
         <q-tabs dense active-color="white" indicator-color="transparent" class="footer-tabs">
           <q-route-tab to="/" icon="home" label="" />
           <q-route-tab to="/profile" icon="account_circle" label="" />
@@ -116,47 +116,5 @@ function toggleLeftDrawer() {
 
 
 <style scoped>
-.footer-nav {
-  background-color: #222;
-  /* Dark background color */
-  border-radius: 20px;
-  /* Rounded corners */
-  padding: 8px 16px;
-  /* Padding for spacing */
-  margin: 8px auto;
-  /* Center the footer nav */
-  width: fit-content;
-  /* Adjust width to content */
-}
 
-.footer-tabs {
-  padding: 0;
-  /* Remove default padding from q-tabs */
-}
-
-.footer-tabs .q-tab {
-  flex-direction: column;
-  /* Stack icons and labels vertically */
-  padding: 8px 12px;
-  /* Adjust padding for tabs */
-  color: white;
-  /* White icon and label color */
-}
-
-.footer-tabs .q-tab__icon {
-  font-size: 24px;
-  /* Adjust icon size */
-  margin-bottom: 4px;
-  /* Space between icon and label */
-}
-
-.footer-tabs .q-tab__label {
-  font-size: 12px;
-  /* Adjust label size */
-}
-
-.footer-tabs .q-tab--active {
-  color: white;
-  /* Active tab color */
-}
 </style>

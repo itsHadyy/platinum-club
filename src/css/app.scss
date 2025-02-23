@@ -1,8 +1,50 @@
-// app global css in SCSS form
 .carImg {
     border-radius: 10px;
 }
 
 .q-btn .q-spinner {
     font-size: 0.72em;
+}
+
+.q-footer {
+    background-color: transparent;
+    margin-bottom: 10px;
+}
+
+.footer-nav {
+    background-color: #211e3aeb;
+    backdrop-filter: blur(10px); 
+    -webkit-backdrop-filter: blur(10px); 
+    border-radius: 10px;
+    padding: 0px 16px;
+    margin: 8px auto;
+    width: fit-content;
+    transition: 0.3s;
+}
+
+.footer-nav:hover{
+    background-color: $secondary;
+}
+
+.footer-tabs {
+    padding: 0;
+}
+
+.footer-tabs .q-tab {
+    flex-direction: column;
+    padding: 0px 12px;
+    color: white;
+}
+
+.footer-tabs .q-tab__icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.footer-tabs .q-tab__label {
+    font-size: 12px;
+}
+
+.footer-tabs .q-tab--active {
+    color: white;
 }
