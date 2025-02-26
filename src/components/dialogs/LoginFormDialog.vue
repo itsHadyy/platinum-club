@@ -8,6 +8,11 @@
                         <div class="text-h6">Login</div>
                         <q-btn icon="close" flat round dense @click="closeDialog" />
                     </q-card-section>
+
+                    <q-card-section v-if="errorMessage">
+                        <q-banner class="bg-red text-white">{{ errorMessage }}</q-banner>
+                    </q-card-section>
+
                     <q-card-section>
                         <q-form class="q-gutter-md">
                             <q-input label="Email" v-model="email" type="email" outlined
@@ -16,34 +21,71 @@
                             <q-input type="password" label="Password" v-model="password" outlined
                                 :rules="[(val) => val.length > 7 || 'Invalid Password']" hide-bottom-space lazy-rules />
                             <div class="row justify-center q-mt-md">
-                                <q-btn label="Login" color="primary" rounded class="q-px-xl" @click="login" />
+                                <q-btn label="Login" color="secondary" class="q-px-xl full-width" @click="login" />
                             </div>
                         </q-form>
+                    </q-card-section>
+                    <q-card-section class="text-center">
+                        <q-btn label="Don't have an account? Signup" color="primary" @click="openRegister" flat
+                            class="text-secondary" />
                     </q-card-section>
                 </q-card>
             </div>
         </q-page>
     </transition>
 </template>
-
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { auth, db } from 'src/boot/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 const dialogVisible = ref(false);
 const email = ref('');
 const password = ref('');
+const errorMessage = ref('');
+const router = useRouter();
+const role = ref('');
 
 const open = () => {
     dialogVisible.value = true;
+    errorMessage.value = ''; // Clear previous errors
 };
 
 const closeDialog = () => {
     dialogVisible.value = false;
 };
+const login = async () => {
+    try {
+        // Authenticate user
+        const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+        const user = userCredential.user;
 
-const login = () => {
-    console.log('Email:', email.value, 'Password:', password.value);
+        // Fetch user role from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+            role.value = userDoc.data().role;
+            console.log("User role:", role.value);
+
+            // Redirect based on role
+            if (role.value === "admin") {
+                router.push('/admin-dashboard'); // Change to your admin route
+            } else {
+                router.push('/user-dashboard'); // Change to user route
+            }
+        } else {
+            console.error("User document not found!");
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        alert(error.message);
+    }
+};
+
+const openRegister = () => {
     closeDialog();
+    router.push('/register');
 };
 
 defineExpose({

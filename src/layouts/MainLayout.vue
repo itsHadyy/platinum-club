@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated class="text-grey bg-white">
+    <q-header class="text-grey bg-white">
       <q-toolbar>
 
         <!-- <q-toolbar-title>
@@ -10,7 +10,9 @@
         <div>Welcome to Platinum Club</div>
         <q-space />
         <!-- <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" /> -->
-        <q-btn flat dense round icon="chat" aria-label="Menu" @click="toggleLeftDrawer" />
+        <q-btn flat dense round icon="notifications" aria-label="Menu" @click="toggleLeftDrawer" />
+        <q-btn flat dense round icon="chat" aria-label="Menu" @click="openContactDialog" />
+        <ContactDialog v-model="contactDialogVisible" />
 
       </q-toolbar>
     </q-header>
@@ -18,7 +20,7 @@
     <q-drawer v-model="leftDrawerOpen" bordered>
       <q-list>
         <q-item-label header>
-          Essential Links
+          Menu
         </q-item-label>
 
         <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
@@ -30,15 +32,15 @@
     </q-page-container>
 
     <q-footer>
-      <div class="footer-nav" >
+      <div class="footer-nav">
         <q-tabs dense active-color="white" indicator-color="transparent" class="footer-tabs">
           <q-route-tab to="/" icon="home" label="" />
           <q-route-tab to="/profile" icon="account_circle" label="" />
-          <!-- <q-route-tab to="/wallet" icon="account_balance_wallet" label="" /> -->
-          <q-route-tab to="/wallet" label="">
+          <q-route-tab to="/wallet" icon="account_balance_wallet" label="" />
+          <!-- <q-route-tab to="/wallet" label="">
             <img alt="Quasar logo" src="~assets/logo.png" style="width: 50px" />
-          </q-route-tab>
-          <q-route-tab to="/wallet" icon="notifications" label="" />
+          </q-route-tab> -->
+          <!-- <q-route-tab to="/wallet" icon="wallet" label="" /> -->
           <q-route-tab icon="menu" label="" @click="toggleLeftDrawer" />
         </q-tabs>
       </div>
@@ -61,60 +63,75 @@
 <script setup>
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
+import ContactDialog from 'components/dialogs/ContactDialog.vue'; // Import ContactDialog
 
 const linksList = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
+    title: 'Access Control',
+    icon: 'qr_code_scanner',
     link: 'https://quasar.dev'
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
+    title: 'Bookings',
+    icon: 'sports_basketball',
     link: 'https://github.com/quasarframework'
   },
   {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
+    title: 'Amenities',
+    // caption: 'chat.quasar.dev',
+    icon: 'volunteer_activism',
     link: 'https://chat.quasar.dev'
   },
   {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
+    title: 'Wallet',
+    // caption: 'forum.quasar.dev',
+    icon: 'wallet',
     link: 'https://forum.quasar.dev'
   },
   {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
+    title: 'Dining',
+    // caption: '@quasarframework',
+    icon: 'dining',
     link: 'https://twitter.quasar.dev'
   },
   {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
+    title: 'Calendar',
+    // caption: '@QuasarFramework',
+    icon: 'event',
     link: 'https://facebook.quasar.dev'
   },
   {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
+    title: 'Help & Support',
+    // caption: 'Community Quasar projects',
+    icon: 'help',
+    link: 'https://awesome.quasar.dev'
+  },
+  {
+    title: 'Conditions & Privacy',
+    // caption: 'Community Quasar projects',
+    icon: 'local_library',
+    link: 'https://awesome.quasar.dev'
+  },
+  {
+    title: 'Settings',
+    // caption: 'Community Quasar projects',
+    icon: 'settings',
     link: 'https://awesome.quasar.dev'
   }
 ]
 
 const leftDrawerOpen = ref(false)
+const contactDialogVisible = ref(false);
+
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
+
+function openContactDialog() {
+  contactDialogVisible.value = true;
+}
 </script>
 
 
-<style scoped>
-
-</style>
+<style scoped></style>

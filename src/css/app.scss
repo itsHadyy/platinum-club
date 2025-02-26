@@ -13,8 +13,8 @@
 
 .footer-nav {
     background-color: #211e3aeb;
-    backdrop-filter: blur(10px); 
-    -webkit-backdrop-filter: blur(10px); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 10px;
     padding: 0px 16px;
     margin: 8px auto;
@@ -22,7 +22,7 @@
     transition: 0.3s;
 }
 
-.footer-nav:hover{
+.footer-nav:hover {
     background-color: $secondary;
 }
 
@@ -32,7 +32,7 @@
 
 .footer-tabs .q-tab {
     flex-direction: column;
-    padding: 0px 12px;
+    padding: 0px 6px;
     color: white;
 }
 
@@ -47,4 +47,48 @@
 
 .footer-tabs .q-tab--active {
     color: white;
+}
+
+
+.login-prompt-card {
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-content {
+    display: grid;
+    grid-template-columns: 60% 40%;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    gap: 10px;
+}
+
+.text-container {
+    flex: 1;
+}
+
+.message {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.image-container {
+    width: 100%;
+    text-align: center;
+
+}
+
+.image-container img {
+    width: 100% !important;
+    margin: auto;
+}
+
+.q-img {
+    border-radius: 10px;
 }

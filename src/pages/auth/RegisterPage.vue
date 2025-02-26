@@ -1,0 +1,95 @@
+<template>
+    <q-page class="row items-center justify-center">
+        <q-card style="width: 500px; max-width: 90vw;" class="q-pa-md">
+            <q-card-section>
+                <div class="text-h6 text-center">Register</div>
+            </q-card-section>
+
+            <q-card-section>
+                <q-form @submit="register" class="q-gutter-md">
+                    <q-input v-model="formData.name" label="Name" outlined :rules="[requiredRule]" />
+                    <q-input v-model="formData.email" label="Email" type="email" outlined
+                        :rules="[requiredRule, emailRule]" />
+                    <q-input v-model="formData.password" label="Password" type="password" outlined
+                        :rules="[requiredRule, passwordRule]" />
+                    <q-input v-model="formData.confirmPassword" label="Confirm Password" type="password" outlined
+                        :rules="[requiredRule, confirmPasswordRule]" />
+                    <q-btn type="submit" label="Register" color="secondary" class="full-width" />
+                </q-form>
+            </q-card-section>
+
+            <q-card-section v-if="errorMessage">
+                <q-banner class="bg-red text-white">{{ errorMessage }}</q-banner>
+            </q-card-section>
+
+            <q-card-section class="text-center">
+                <q-btn flat label="Already have an account? Login" color="primary" @click="openLoginDialog"
+                    class="text-secondary" />
+            </q-card-section>
+        </q-card>
+
+        <LoginFormDialog ref="loginDialogRef" />
+    </q-page>
+</template>
+
+
+<script setup>
+import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { auth, db } from 'src/boot/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import LoginFormDialog from 'src/components/dialogs/LoginFormDialog.vue';
+
+const router = useRouter();
+const loginDialogRef = ref(null);
+
+const formData = reactive({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+});
+
+const requiredRule = (val) => !!val || 'Field is required';
+const emailRule = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) || 'Invalid email';
+const passwordRule = (val) => val.length >= 8 || 'Password must be at least 8 characters';
+const confirmPasswordRule = (val) => val === formData.password || 'Passwords do not match';
+
+// Error message state
+const errorMessage = ref('');
+
+const register = async () => {
+    if (formData.password !== formData.confirmPassword) {
+        errorMessage.value = "Passwords do not match!";
+        return;
+    }
+
+    try {
+        // Register user in Firebase Authentication
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const user = userCredential.user;
+
+        // Save user info in Firestore with role "pending"
+        await setDoc(doc(db, "users", user.uid), {
+            name: formData.name,
+            email: formData.email,
+            role: "pending",  // User needs admin approval
+            createdAt: new Date()
+        });
+
+        alert("Registration successful! Wait for admin approval.");
+        router.push('/login');
+    } catch (error) {
+        errorMessage.value = error.message;
+    }
+};
+
+const openLoginDialog = () => {
+    loginDialogRef.value.open();
+};
+</script>
+
+<style scoped>
+/* Add any custom styles here */
+</style>
