@@ -41,13 +41,12 @@ import { auth, db } from 'src/boot/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
-const dialogVisible = ref(false);
+const router = useRouter();
 const email = ref('');
 const password = ref('');
 const errorMessage = ref('');
-const router = useRouter();
-const role = ref('');
 
+const dialogVisible = ref(false);
 const open = () => {
     dialogVisible.value = true;
     errorMessage.value = ''; // Clear previous errors
@@ -56,30 +55,26 @@ const open = () => {
 const closeDialog = () => {
     dialogVisible.value = false;
 };
+
 const login = async () => {
     try {
-        // Authenticate user
         const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
         const user = userCredential.user;
 
-        // Fetch user role from Firestore
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-            role.value = userDoc.data().role;
-            console.log("User role:", role.value);
+        const userData = userDoc.data();
 
-            // Redirect based on role
-            if (role.value === "admin") {
-                router.push('/admin-dashboard'); // Change to your admin route
-            } else {
-                router.push('/user-dashboard'); // Change to user route
-            }
+        if (userData.role === "pending") {
+            alert("Your account is pending approval.");
+            return;
+        } else if (userData.role === "admin") {
+            router.push('/admin');
         } else {
-            console.error("User document not found!");
+            router.push('/');
         }
     } catch (error) {
-        console.error("Login error:", error);
-        alert(error.message);
+        console.error("Login failed:", error); // Log the error
+        errorMessage.value = "Invalid credentials.";
     }
 };
 
@@ -92,6 +87,7 @@ defineExpose({
     open,
     close: closeDialog,
 });
+
 </script>
 
 <style scoped>

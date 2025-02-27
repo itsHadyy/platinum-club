@@ -32,7 +32,6 @@
     </q-page>
 </template>
 
-
 <script setup>
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -43,6 +42,7 @@ import LoginFormDialog from 'src/components/dialogs/LoginFormDialog.vue';
 
 const router = useRouter();
 const loginDialogRef = ref(null);
+const loading = ref(false);
 
 const formData = reactive({
     name: '',
@@ -51,6 +51,7 @@ const formData = reactive({
     confirmPassword: '',
 });
 
+// Validation Rules
 const requiredRule = (val) => !!val || 'Field is required';
 const emailRule = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) || 'Invalid email';
 const passwordRule = (val) => val.length >= 8 || 'Password must be at least 8 characters';
@@ -65,6 +66,8 @@ const register = async () => {
         return;
     }
 
+    loading.value = true; // Start loading
+
     try {
         // Register user in Firebase Authentication
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
@@ -78,11 +81,25 @@ const register = async () => {
             createdAt: new Date()
         });
 
-        alert("Registration successful! Wait for admin approval.");
-        router.push('/login');
+        Object.assign(formData, { name: '', email: '', password: '', confirmPassword: '' });
+
+        router.push('/pending');
     } catch (error) {
-        errorMessage.value = error.message;
+        errorMessage.value = firebaseErrorHandler(error.code);
+    } finally {
+        loading.value = false; // Stop loading
     }
+};
+
+// Firebase Error Handling Function
+const firebaseErrorHandler = (code) => {
+    const errors = {
+        "auth/email-already-in-use": "This email is already registered.",
+        "auth/invalid-email": "Invalid email format.",
+        "auth/weak-password": "Password should be at least 8 characters.",
+        "auth/network-request-failed": "Network error. Please check your connection.",
+    };
+    return errors[code] || "An unexpected error occurred. Please try again.";
 };
 
 const openLoginDialog = () => {

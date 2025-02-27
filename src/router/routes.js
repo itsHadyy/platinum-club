@@ -1,27 +1,18 @@
 import { defineAsyncComponent } from 'vue';
 
-const routes = [
+export default [
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('src/layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/auth/HomePage.vue') },
+      { path: '', component: () => import('src/pages/auth/HomePage.vue') },
       { path: '/register', component: defineAsyncComponent(() => import('pages/auth/RegisterPage.vue')) },
-      { path: '/login', component: defineAsyncComponent(() => import('pages/auth/LoginPage.vue')) },  // New login page
+      { path: '/admin', component: () => import('src/pages/AdminPanel.vue'), meta: { requiresAdmin: true } },
       { path: '/pending', component: () => import('src/pages/auth/PendingApproval.vue') },
-      {
-        path: '/admin-dashboard',
-        component: () => import('pages/AdminDashboard.vue'),
-        meta: { requiresAdmin: true } // Protect admin dashboard
-      }
     ]
   },
-
-  // Catch all unknown routes
   {
-    path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
+    path: '/login',
+    component: () => import('src/pages/auth/LoginPage.vue')
   }
 ];
-
-export default routes;
