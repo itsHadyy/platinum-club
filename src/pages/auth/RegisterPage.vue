@@ -8,12 +8,16 @@
             <q-card-section>
                 <q-form @submit="register" class="q-gutter-md">
                     <q-input v-model="formData.name" label="Name" outlined :rules="[requiredRule]" />
-                    <q-input v-model="formData.email" label="Email" type="email" outlined
-                        :rules="[requiredRule, emailRule]" />
-                    <q-input v-model="formData.password" label="Password" type="password" outlined
-                        :rules="[requiredRule, passwordRule]" />
-                    <q-input v-model="formData.confirmPassword" label="Confirm Password" type="password" outlined
+                    <q-input v-model="formData.email" label="Email" type="email" outlined :rules="[requiredRule, emailRule]" />
+                    <q-input v-model="formData.phone" label="Phone Number" outlined :rules="[requiredRule]" />
+                    <q-input v-model="formData.membershipId" label="Membership ID" outlined :rules="[requiredRule]" />
+                    <q-input v-model="formData.nationalId" label="National ID" type="text" outlined 
+                        :rules="[requiredRule, nationalIdRule]" />
+                    <q-input v-model="formData.dob" label="Date of Birth" type="date" outlined :rules="[requiredRule]" />
+                    <q-input v-model="formData.password" label="Password" type="password" outlined :rules="[requiredRule, passwordRule]" />
+                    <q-input v-model="formData.confirmPassword" label="Confirm Password" type="password" outlined 
                         :rules="[requiredRule, confirmPasswordRule]" />
+
                     <q-btn type="submit" label="Register" color="secondary" class="full-width" />
                 </q-form>
             </q-card-section>
@@ -47,6 +51,10 @@ const loading = ref(false);
 const formData = reactive({
     name: '',
     email: '',
+    membershipId: '',
+    nationalId: '',
+    dob: '',
+    phone: '',
     password: '',
     confirmPassword: '',
 });
@@ -56,6 +64,7 @@ const requiredRule = (val) => !!val || 'Field is required';
 const emailRule = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) || 'Invalid email';
 const passwordRule = (val) => val.length >= 8 || 'Password must be at least 8 characters';
 const confirmPasswordRule = (val) => val === formData.password || 'Passwords do not match';
+const nationalIdRule = (val) => /^\d{14}$/.test(val) || 'National ID must be exactly 14 numbers';
 
 // Error message state
 const errorMessage = ref('');
@@ -77,11 +86,15 @@ const register = async () => {
         await setDoc(doc(db, "users", user.uid), {
             name: formData.name,
             email: formData.email,
-            role: "pending",  // User needs admin approval
+            membershipId: formData.membershipId,
+            nationalId: formData.nationalId,
+            dob: formData.dob,
+            role: "pending",// Users cannot assign themselves as admins
+            phone: formData.phone,  
             createdAt: new Date()
         });
 
-        Object.assign(formData, { name: '', email: '', password: '', confirmPassword: '' });
+        Object.assign(formData, { name: '', email: '', membershipId: '', nationalId: '', phone: '', dob: '', password: '', confirmPassword: '' });
 
         router.push('/pending');
     } catch (error) {

@@ -1,47 +1,127 @@
 <template>
-    <div class="q-pa-md">
-        <h2 class="text-center">Admin Panel</h2>
+    <q-page class="q-pa-md">
+        <q-card class="q-pa-md shadow-2">
+            <q-card-section>
+                <div class="text-h5 text-center text-secondary">Admin Panel</div>
+            </q-card-section>
 
-        <q-banner v-if="loading" class="bg-blue text-white q-mb-md">Loading users...</q-banner>
-        <q-banner v-if="error" class="bg-red text-white q-mb-md">{{ error }}</q-banner>
+            <!-- Role Filter -->
+            <q-card-section>
+                <q-select v-model="selectedRole" :options="roleOptions" label="Filter by role" outlined dense emit-value
+                    map-options />
+            </q-card-section>
 
-        <q-table v-if="users.length" flat bordered :rows="users" :columns="columns" row-key="id">
-            <template v-slot:body-cell-actions="props">
-                <q-td :props="props">
-                    <q-btn v-if="props.row.role === 'pending'" color="positive" label="Approve"
-                        @click="updateRole(props.row.id, 'user')" />
-                    <q-btn v-if="props.row.role === 'user'" color="warning" label="Make Admin"
-                        @click="updateRole(props.row.id, 'admin')" />
-                </q-td>
-            </template>
-        </q-table>
+            <q-card-section>
+                <q-banner v-if="loading" class="bg-blue text-white">Loading users...</q-banner>
+                <q-banner v-if="error" class="bg-red text-white">{{ error }}</q-banner>
 
-        <p v-else class="text-center text-grey">No users found.</p>
-    </div>
+                <q-table v-if="filteredUsers.length" flat bordered :rows="filteredUsers" :columns="columns" row-key="id"
+                    :rows-per-page-options="[5, 10, 20]">
+
+                    <template v-slot:body-cell-name="props">
+                        <q-td :props="props">
+                            <q-btn flat dense @click="viewUserDetails(props.row)">{{ props.row.name }}</q-btn>
+                        </q-td>
+                    </template>
+
+                    <template v-slot:body-cell-role="props">
+                        <q-td :props="props">
+                            <q-badge v-if="props.row.role === 'admin'" color="blue" text-color="white">Admin</q-badge>
+                            <q-badge v-else-if="props.row.role === 'user'" color="green"
+                                text-color="white">User</q-badge>
+                            <q-badge v-else color="orange" text-color="white">Pending</q-badge>
+                        </q-td>
+                    </template>
+
+                    <template v-slot:body-cell-actions="props">
+                        <q-td :props="props">
+                            <q-btn v-if="props.row.role === 'pending'" color="positive" icon="check" dense round
+                                class="q-mr-sm" @click="updateRole(props.row.id, 'user')" />
+
+                            <q-btn v-if="props.row.role === 'user'" color="warning" icon="admin_panel_settings" dense
+                                round class="q-mr-sm" @click="confirmAdminPassword(props.row.id)" />
+
+                            <q-btn color="negative" icon="delete" dense round @click="confirmDeleteUser(props.row.id)"
+                                class="q-mr-sm" />
+                        </q-td>
+                    </template>
+
+                    <template v-slot:body-cell-details="props">
+                        <q-td :props="props">
+                            <q-btn icon="visibility" flat dense @click="viewUserDetails(props.row)" />
+                        </q-td>
+                    </template>
+                </q-table>
+
+                <p v-else class="text-center text-grey q-mt-md">No users found.</p>
+            </q-card-section>
+        </q-card>
+
+        <!-- User Details Dialog -->
+        <q-dialog v-model="showUserDialog">
+            <q-card class="q-pa-md">
+                <q-card-section>
+                    <div class="text-h6">User Details</div>
+                </q-card-section>
+                <q-card-section>
+                    <p><strong>Name:</strong> {{ selectedUser?.name }}</p>
+                    <p><strong>Email:</strong> {{ selectedUser?.email }}</p>
+                    <p><strong>Phone Number:</strong> {{ selectedUser.phone }}</p>
+                    <p><strong>Membership ID:</strong> {{ selectedUser?.membershipId }}</p>
+                    <p><strong>National ID:</strong> {{ selectedUser?.nationalId }}</p>
+                    <p><strong>Date of Birth:</strong> {{ selectedUser?.dob }}</p>
+                    <p><strong>Role:</strong> {{ selectedUser?.role }}</p>
+                    <p v-if="selectedUser?.createdAt"><strong>Joined:</strong> {{ selectedUser.createdAt }}</p>
+                </q-card-section>
+                <q-card-actions align="right">
+                    <q-btn flat label="Close" color="primary" v-close-popup />
+                </q-card-actions>
+            </q-card>
+        </q-dialog>
+    </q-page>
 </template>
 
+
 <script setup>
-import { ref, onMounted } from 'vue';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { ref, computed, onMounted } from 'vue';
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
 
 const users = ref([]);
 const loading = ref(true);
 const error = ref("");
+const selectedRole = ref("all");
+const showUserDialog = ref(false);
+const selectedUser = ref(null);
+const ADMIN_PASSWORD = "Admin1234"; // Change this for security later
 
 const columns = [
     { name: "name", label: "Name", field: "name", align: "left" },
     { name: "email", label: "Email", field: "email", align: "left" },
     { name: "role", label: "Role", field: "role", align: "left" },
-    { name: "actions", label: "Actions", align: "center" }
+    { name: "actions", label: "Actions", align: "center" },
+    { name: "details", label: "Details", align: "center" }
 ];
+
+const roleOptions = [
+    { label: "All", value: "all" },
+    { label: "Admin", value: "admin" },
+    { label: "User", value: "user" },
+    { label: "Pending", value: "pending" }
+];
+
+const filteredUsers = computed(() => {
+    if (selectedRole.value === "all") {
+        return users.value;
+    }
+    return users.value.filter(user => user.role === selectedRole.value);
+});
 
 const fetchUsers = async () => {
     loading.value = true;
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
         users.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log("Users fetched:", users.value); // Debugging
     } catch (err) {
         console.error("Error fetching users:", err);
         error.value = "Failed to load users.";
@@ -53,7 +133,7 @@ const fetchUsers = async () => {
 const updateRole = async (userId, newRole) => {
     try {
         await setDoc(doc(db, "users", userId), { role: newRole }, { merge: true });
-        fetchUsers(); // Refresh user list
+        fetchUsers();
         alert(`User role updated to ${newRole}`);
     } catch (err) {
         console.error("Error updating role:", err);
@@ -61,11 +141,44 @@ const updateRole = async (userId, newRole) => {
     }
 };
 
+const confirmAdminPassword = async (userId) => {
+    const password = prompt("Enter the admin password to approve:");
+    if (password === ADMIN_PASSWORD) {
+        updateRole(userId, "admin");
+    } else {
+        alert("Incorrect password! Action denied.");
+    }
+};
+
+const confirmDeleteUser = async (userId) => {
+    const confirmation = confirm("Are you sure you want to delete this user?");
+    if (confirmation) {
+        deleteUser(userId);
+    }
+};
+
+const deleteUser = async (userId) => {
+    try {
+        await deleteDoc(doc(db, "users", userId));
+        fetchUsers();
+        alert("User deleted successfully.");
+    } catch (err) {
+        console.error("Error deleting user:", err);
+        alert("Failed to delete user.");
+    }
+};
+
+const viewUserDetails = (user) => {
+    selectedUser.value = user;
+    showUserDialog.value = true;
+};
+
 onMounted(fetchUsers);
 </script>
 
 <style scoped>
-.q-btn {
-    margin-right: 8px;
+.q-card {
+    max-width: 800px;
+    margin: auto;
 }
 </style>
