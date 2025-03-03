@@ -79,20 +79,35 @@ export default {
             'Other'
         ];
 
-        const submitForm = () => {
-            // Implement your form submission logic here
-            console.log('Form submitted:', {
-                name: name.value,
-                email: formEmail.value,
-                message: message.value,
-            });
+        const submitForm = async () => {
+            try {
+                const response = await fetch("http://localhost:3000/send-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: name.value,
+                        email: formEmail.value,
+                        subject: subject.value,
+                        message: message.value,
+                    }),
+                });
 
-            // Reset form fields after submission
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("Email sent successfully!");
+                } else {
+                    alert("Failed to send email.");
+                }
+            } catch (error) {
+                console.error("Error sending email:", error);
+                alert("An error occurred.");
+            }
+
             name.value = '';
             formEmail.value = '';
             message.value = '';
-
-            dialog.value = false; // Close the dialog
+            dialog.value = false;
         };
 
         return {

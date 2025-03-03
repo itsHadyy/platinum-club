@@ -73,7 +73,7 @@
                     <p><strong>Role:</strong> {{ selectedUser?.role }}</p>
                     <p v-if="selectedUser?.createdAt"><strong>Joined:</strong> {{ selectedUser.createdAt }}</p>
                 </q-card-section>
-                <q-card-actions align="right">
+                <q-card-actions>
                     <q-btn flat label="Close" color="primary" v-close-popup />
                 </q-card-actions>
             </q-card>
