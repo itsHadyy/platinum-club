@@ -6,7 +6,7 @@
             </q-card-section>
 
             <q-card-section>
-                <q-form @submit="register" class="q-gutter-md">
+                <q-form @submit="register" class="q-gutter-xsm">
                     <q-input v-model="formData.name" label="Name" outlined :rules="[requiredRule]" />
                     <q-input v-model="formData.email" label="Email" type="email" outlined :rules="[requiredRule, emailRule]" />
                     <q-input v-model="formData.phone" label="Phone Number" outlined :rules="[requiredRule]" />
