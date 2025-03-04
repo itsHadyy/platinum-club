@@ -117,6 +117,12 @@ const linksList = [
     // caption: 'Community Quasar projects',
     icon: 'settings',
     link: 'https://awesome.quasar.dev'
+  },
+  {
+    title: 'Logout',
+    // caption: 'Community Quasar projects',
+    icon: 'logout',
+    link: 'https://awesome.quasar.dev'
   }
 ]
 

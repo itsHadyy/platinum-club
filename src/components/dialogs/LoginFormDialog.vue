@@ -64,14 +64,15 @@ const login = async () => {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const userData = userDoc.data();
 
-        if (userData.role === "pending") {
-            alert("Your account is pending approval.");
-            return;
-        } else if (userData.role === "admin") {
-            router.push('/admin');
-        } else {
-            router.push('/');
-        }
+        localStorage.setItem('userSession', JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            name: userData.name,
+            role: userData.role
+        }));
+
+        router.push(userData.role === "admin" ? '/admin' : '/dashboard');
+
     } catch (error) {
         console.error("Login failed:", error); // Log the error
         errorMessage.value = "Invalid credentials.";
