@@ -23,8 +23,8 @@ app.post('/send-email', async (req, res) => {
     const mailOptions = {
         from: email,
         to: process.env.EMAIL_USER, // Your email where you receive messages
-        subject: `Contact Form Submission: ${subject}`,
-        text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`
+        subject: `Platinum Club App | Contact Form Submission: ${subject}`,
+        text: `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\nMessage: ${message}`
     };
 
     try {
