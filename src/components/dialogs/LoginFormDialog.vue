@@ -35,11 +35,13 @@
     </transition>
 </template>
 <script setup>
-import { ref } from 'vue';
+import { ref, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth, db } from 'src/boot/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+
+const emit = defineEmits(['login']);
 
 const router = useRouter();
 const email = ref('');
@@ -47,6 +49,7 @@ const password = ref('');
 const errorMessage = ref('');
 
 const dialogVisible = ref(false);
+const username = ref('');
 const open = () => {
     dialogVisible.value = true;
     errorMessage.value = ''; // Clear previous errors
@@ -76,6 +79,11 @@ const login = async () => {
     } catch (error) {
         console.error("Login failed:", error); // Log the error
         errorMessage.value = "Invalid credentials.";
+    }
+
+    if (username.value && password.value) {
+        const userData = { name: username.value };
+        emit('login', userData);
     }
 };
 
