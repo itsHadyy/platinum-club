@@ -96,7 +96,7 @@ const register = async () => {
 
         Object.assign(formData, { name: '', email: '', membershipId: '', nationalId: '', phone: '', dob: '', password: '', confirmPassword: '' });
 
-        router.push('/pending');
+        router.push('/auth/pending');
     } catch (error) {
         errorMessage.value = firebaseErrorHandler(error.code);
     } finally {

@@ -66,7 +66,7 @@ const login = async () => {
             if (userData.role === "admin") {
                 router.push("/admin");
             } else if (userData.role === "pending") {
-                router.push("/pending");
+                router.push("/auth/pending");
             } else {
                 router.push("/dashboard");
             }
@@ -91,7 +91,7 @@ const closeDialog = () => {
 
 const openRegister = () => {
     closeDialog();
-    router.push("/register");
+    router.push("/auth/register");
 };
 
 defineExpose({

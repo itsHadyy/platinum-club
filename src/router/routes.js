@@ -6,6 +6,7 @@ export default [
     children: [
       { path: 'login', component: () => import('src/pages/auth/LoginPage.vue') },
       { path: 'register', component: () => import('src/pages/auth/RegisterPage.vue') },
+      { path: 'pending', component: () => import('src/pages/auth/PendingApproval.vue') },
       { path: 'landing', component: () => import('src/pages/auth/LandingPage.vue') },
     ]
   },
