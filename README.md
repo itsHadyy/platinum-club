@@ -1,40 +1,102 @@
-# Platinum Club Mobile App (platinum-club)
+# 📌 Platinum Club - Quasar Firebase App
 
-A Quasar Project
+A **Quasar Framework** + **Firebase** application with authentication, role-based access, and a clean layout structure for authenticated and unauthenticated users.
 
-## Install the dependencies
-```bash
-yarn
-# or
+---
+
+## 📂 Project Structure
+```
+/src
+  ├── /layouts
+  │   ├── AuthLayout.vue  # Layout for unauthenticated users (Login/Register)
+  │   ├── MainLayout.vue  # Layout for authenticated users (Dashboard, etc.)
+  │
+  ├── /pages
+  │   ├── /auth
+  │   │   ├── LoginPage.vue
+  │   │   ├── RegisterPage.vue
+  │   │   ├── LandingPage.vue
+  │   │   ├── PendingApproval.vue
+  │   ├── /authed
+  │   │   ├── HomePage.vue
+  │   │   ├── UserDashboard.vue
+  │   │   ├── AmenitiesPage.vue
+  │   ├── AdminPanel.vue
+  │   ├── ErrorNotFound.vue
+  │
+  ├── /stores
+  │   ├── useAuthStore.js   # Pinia store for authentication
+  │
+  ├── routes.js  # Routing setup
+  ├── main.js    # App entry file
+```
+
+---
+
+## 🛠 Features
+✅ **Authentication** - Users can log in and register using Firebase Auth.  
+✅ **Role-Based Access** - Redirect users based on roles (Admin, User, Pending).  
+✅ **Firebase Firestore** - Stores user information and roles.  
+✅ **Layouts** - Separate layouts for authenticated and unauthenticated users.  
+✅ **Quasar Components** - Beautiful UI using Quasar Framework.  
+
+---
+
+## 🚀 Getting Started
+### 1️⃣ Install Dependencies
+```sh
 npm install
 ```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
+### 2️⃣ Setup Firebase
+1. Go to [Firebase Console](https://console.firebase.google.com/).  
+2. Create a new project and enable:
+   - Authentication (Email/Password)
+   - Firestore Database  
+3. Copy your Firebase credentials into `.env` file:
+```sh
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+### 3️⃣ Run the App
+```sh
 quasar dev
 ```
 
+---
 
-### Lint the files
-```bash
-yarn lint
-# or
-npm run lint
-```
+## 🔑 Authentication & Routing
+| Role  | Redirects To  |
+|--------|-------------|
+| **User**  | `/dashboard` |
+| **Admin** | `/admin` |
+| **Pending** | `/auth/pending` |
 
+- `useAuthStore.js` manages authentication state.  
+- Firebase Firestore stores user roles.  
 
-### Format the files
-```bash
-yarn format
-# or
-npm run format
-```
+---
 
+## 📜 API & Firebase
+This app uses:
+- **Firebase Authentication** for login/signup.
+- **Firestore Database** to store user roles.
+- **Pinia Store** (`useAuthStore.js`) to manage state.
 
-### Build the app for production
-```bash
+---
+
+## 🌍 Deployment
+To build for production:
+```sh
 quasar build
 ```
 
-### Customize the configuration
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
+---
+
+## 📧 Contact
+If you have any questions or issues, feel free to reach out! 🚀
