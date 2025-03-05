@@ -35,68 +35,69 @@
     </transition>
 </template>
 <script setup>
-import { ref, defineEmits } from 'vue';
-import { useRouter } from 'vue-router';
-import { auth, db } from 'src/boot/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { ref } from "vue";
+import { useAuthStore } from "src/stores/useAuthStore";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { useRouter } from "vue-router";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
-const emit = defineEmits(['login']);
-
+const email = ref("");
+const password = ref("");
+const authStore = useAuthStore();
 const router = useRouter();
-const email = ref('');
-const password = ref('');
-const errorMessage = ref('');
+const errorMessage = ref("");
+
+const login = async () => {
+    const auth = getAuth();
+    const db = getFirestore();
+
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+        const user = userCredential.user;
+
+        // 🔹 Fetch user role from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            authStore.login({ ...user, role: userData.role });
+
+            // 🔹 Redirect based on role
+            if (userData.role === "admin") {
+                router.push("/admin");
+            } else if (userData.role === "pending") {
+                router.push("/pending");
+            } else {
+                router.push("/dashboard");
+            }
+        } else {
+            console.error("User document not found in Firestore.");
+        }
+    } catch (error) {
+        console.error("Login failed:", error.message);
+        errorMessage.value = "Invalid credentials. Please try again.";
+    }
+};
 
 const dialogVisible = ref(false);
-const username = ref('');
 const open = () => {
     dialogVisible.value = true;
-    errorMessage.value = ''; // Clear previous errors
+    errorMessage.value = ""; // Clear previous errors
 };
 
 const closeDialog = () => {
     dialogVisible.value = false;
 };
 
-const login = async () => {
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
-        const user = userCredential.user;
-
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        const userData = userDoc.data();
-
-        localStorage.setItem('userSession', JSON.stringify({
-            uid: user.uid,
-            email: user.email,
-            name: userData.name,
-            role: userData.role
-        }));
-
-        router.push(userData.role === "admin" ? '/admin' : '/dashboard');
-
-    } catch (error) {
-        console.error("Login failed:", error); // Log the error
-        errorMessage.value = "Invalid credentials.";
-    }
-
-    if (username.value && password.value) {
-        const userData = { name: username.value };
-        emit('login', userData);
-    }
-};
-
 const openRegister = () => {
     closeDialog();
-    router.push('/register');
+    router.push("/register");
 };
 
 defineExpose({
     open,
     close: closeDialog,
 });
-
 </script>
 
 <style scoped>
