@@ -2,6 +2,8 @@
     <q-page class="text-center q-pa-xl">
         <img alt="Quasar logo" src="~assets/logo.png" style="width: 300px" />
 
+        <q-space />
+
         <q-btn label="login" color="secondary" dense type="submit" class="q-px-xl" @click="openLoginFormDialog" />
         <LoginFormDialog ref="loginDialogRef" />
     </q-page>

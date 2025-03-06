@@ -18,7 +18,7 @@ export default [
     meta: { requiresAuth: true },
     children: [
       { path: '', component: () => import('src/pages/authed/HomePage.vue') },
-      { path: 'dashboard', component: () => import('src/pages/authed/UserDashboard.vue') },
+      { path: 'profile', component: () => import('src/pages/authed/UserProfile.vue') },
       // { path: 'amenities', component: () => import('src/pages/authed/AmenitiesPage.vue') },
       { path: 'admin', component: () => import('src/pages/AdminPanel.vue'), meta: { requiresAdmin: true } }
     ]

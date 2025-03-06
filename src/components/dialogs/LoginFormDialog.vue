@@ -60,7 +60,11 @@ const login = async () => {
 
         if (userDoc.exists()) {
             const userData = userDoc.data();
-            authStore.login({ ...user, role: userData.role });
+            authStore.login({
+                ...user,
+                name: userData.name,  // Ensure the name is set
+                role: userData.role
+            });
 
             // 🔹 Redirect based on role
             if (userData.role === "admin") {
@@ -68,7 +72,7 @@ const login = async () => {
             } else if (userData.role === "pending") {
                 router.push("/auth/pending");
             } else {
-                router.push("/dashboard");
+                router.push("/");
             }
         } else {
             console.error("User document not found in Firestore.");
