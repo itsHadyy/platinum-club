@@ -40,7 +40,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from 'src/stores/useAuthStore';
 import CarouselComponent from 'src/components/CarouselComponent.vue';
-import CardComponent from 'src/components/CardComponent.vue';
+import CardComponent from 'src/components/LoginCardComponent.vue';
 import LoginFormDialog from 'src/components/dialogs/LoginFormDialog.vue';
 
 const authStore = useAuthStore();

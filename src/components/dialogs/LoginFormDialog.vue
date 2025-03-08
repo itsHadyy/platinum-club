@@ -14,14 +14,20 @@
                     </q-card-section>
 
                     <q-card-section>
-                        <q-form class="q-gutter-md">
+                        <q-form class="q-gutter-md" @submit.prevent="login">
                             <q-input label="Email" v-model="email" type="email" outlined
                                 :rules="[(val) => val.includes('@') && val.includes('.') || 'Invalid E-mail']"
                                 hide-bottom-space lazy-rules />
                             <q-input type="password" label="Password" v-model="password" outlined
                                 :rules="[(val) => val.length > 7 || 'Invalid Password']" hide-bottom-space lazy-rules />
+
                             <div class="row justify-center q-mt-md">
-                                <q-btn label="Login" color="secondary" class="q-px-xl full-width" @click="login" />
+                                <q-btn :loading="loading" :disable="loading" label="Login" color="secondary"
+                                    class="q-px-xl full-width" @click="login">
+                                    <template v-slot:loading>
+                                        <q-spinner size="20px" color="white" />
+                                    </template>
+                                </q-btn>
                             </div>
                         </q-form>
                     </q-card-section>
@@ -34,6 +40,7 @@
         </q-page>
     </transition>
 </template>
+
 <script setup>
 import { ref } from "vue";
 import { useAuthStore } from "src/stores/useAuthStore";
@@ -46,8 +53,12 @@ const password = ref("");
 const authStore = useAuthStore();
 const router = useRouter();
 const errorMessage = ref("");
+const loading = ref(false); // Added loading state
 
 const login = async () => {
+    if (loading.value) return; // Prevent duplicate clicks
+    loading.value = true; // Start loading
+
     const auth = getAuth();
     const db = getFirestore();
 
@@ -76,10 +87,13 @@ const login = async () => {
             }
         } else {
             console.error("User document not found in Firestore.");
+            errorMessage.value = "User not found. Please try again.";
         }
     } catch (error) {
         console.error("Login failed:", error.message);
         errorMessage.value = "Invalid credentials. Please try again.";
+    } finally {
+        loading.value = false; // Stop loading
     }
 };
 
@@ -103,15 +117,3 @@ defineExpose({
     close: closeDialog,
 });
 </script>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-</style>

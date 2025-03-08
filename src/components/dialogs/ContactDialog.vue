@@ -58,7 +58,7 @@ export default {
         const email = 'info@platinumClub.com';
         const phone = '+20 123 456 7890';
         const website = 'www.platinumClub.com';
-        const address = '123 Main St, Cairo, Egypt';
+        const address = 'New Cairo, Cairo, Egypt';
 
         const name = ref('');
         const formEmail = ref('');

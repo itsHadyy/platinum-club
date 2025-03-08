@@ -92,3 +92,33 @@
 .q-img {
     border-radius: 10px;
 }
+
+.logo-header{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 0;
+    color: $secondary;
+    font-size: 18px;
+}
+
+.logo-header img{
+    width: 40px;
+}
+
+.location{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-content: center;
+}
+.location p{
+    margin: 0;
+}
+.q-btn{
+    font-size: smaller;
+}
+
+.q-page{
+    min-height: auto !important;
+}

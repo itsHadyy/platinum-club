@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, browserLocalPersistence, setPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAQXnpcCwk1hqwooHvMlMawy86ow_I3jNo",
@@ -16,5 +17,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-export { auth, db };
+// Ensure user stays logged in even after refresh or app restart
+setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+        console.log("✅ Auth persistence enabled (local)");
+    })
+    .catch((error) => {
+        console.error("❌ Error enabling auth persistence:", error);
+    });
+
+export { auth, db, storage };

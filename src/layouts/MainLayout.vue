@@ -2,7 +2,10 @@
   <q-layout view="lHh Lpr lFf">
     <q-header class="text-grey bg-white">
       <q-toolbar>
-        <div>Welcome to Platinum Club</div>
+        <div class="logo-header">
+          <img alt="Quasar logo" src="~assets/logo.png"/>
+          Platinum Club
+        </div>
         <q-space />
         <q-btn flat dense round icon="notifications" aria-label="Notifications" @click="toggleLeftDrawer" />
         <q-btn flat dense round icon="chat" aria-label="Chat" @click="openContactDialog" />

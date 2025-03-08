@@ -6,10 +6,16 @@
       <!-- Profile Image & Upload -->
       <q-card-section class="text-center">
         <q-avatar size="120px">
-          <img :src="userProfileImage || defaultProfileImage" />
+          <img :src="previewImage || userProfileImage || defaultProfileImage" />
         </q-avatar>
-        <q-btn round dense flat icon="edit" class="q-ml-sm" @click="selectImage" />
-        <q-file ref="fileInput" class="hidden" v-model="selectedFile" accept="image/*" @change="uploadProfileImage" />
+        <q-btn round dense flat icon="edit" class="q-ml-sm" @click="fileInput.$el.click()" />
+        <q-file ref="fileInput" class="hidden" accept="image/*" @update:modelValue="previewSelectedImage" />
+      </q-card-section>
+
+      <!-- Save/Discard Buttons (Only Show When a New Image is Selected) -->
+      <q-card-section v-if="previewImage">
+        <q-btn color="primary" label="Save" @click="uploadProfileImage" />
+        <q-btn color="negative" label="Discard" class="q-ml-sm" @click="discardChanges" />
       </q-card-section>
 
       <q-card-section>
@@ -36,29 +42,7 @@
             </q-item-section>
           </q-item>
 
-          <!-- Membership ID (Non-Editable) -->
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="badge" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Membership ID</q-item-label>
-              <q-item-label caption>{{ user?.membershipId || "N/A" }}</q-item-label>
-            </q-item-section>
-          </q-item>
-
-          <!-- National ID (Non-Editable) -->
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="credit_card" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>National ID</q-item-label>
-              <q-item-label caption>{{ user?.nationalId || "N/A" }}</q-item-label>
-            </q-item-section>
-          </q-item>
-
-          <!-- Mobile Number (Editable) -->
+          <!-- Mobile Number -->
           <q-item>
             <q-item-section avatar>
               <q-icon name="phone" />
@@ -85,18 +69,22 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
+// Firebase instances
 const auth = getAuth();
 const db = getFirestore();
 const storage = getStorage();
 
+// Reactive variables
 const user = ref(null);
 const mobileNumber = ref("");
 const userProfileImage = ref("");
+const previewImage = ref(null); // Stores the preview before uploading
 const selectedFile = ref(null);
 const fileInput = ref(null);
 const isEditingPhone = ref(false);
 const defaultProfileImage = "https://cdn.quasar.dev/img/avatar5.png";
 
+// Fetch user data on mount
 onMounted(async () => {
   if (auth.currentUser) {
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
@@ -108,7 +96,7 @@ onMounted(async () => {
   }
 });
 
-// Function to update mobile number
+// Update mobile number in Firestore
 const updateMobileNumber = async () => {
   if (!mobileNumber.value.trim()) return;
 
@@ -120,27 +108,59 @@ const updateMobileNumber = async () => {
   alert("Mobile number updated successfully!");
 };
 
-// Function to trigger file input
-const selectImage = () => {
-  fileInput.value.$el.click();
+// Function to preview selected image before uploading
+const previewSelectedImage = (file) => {
+  if (!file) return;
+
+  selectedFile.value = file;
+
+  // Create a temporary URL for preview
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => {
+    previewImage.value = reader.result;
+  };
+};
+
+// Function to discard changes (cancel preview)
+const discardChanges = () => {
+  selectedFile.value = null;
+  previewImage.value = null;
 };
 
 // Function to upload profile image
 const uploadProfileImage = async () => {
-  if (!selectedFile.value) return;
+  if (!selectedFile.value) {
+    console.log("No file selected.");
+    return;
+  }
 
-  const file = selectedFile.value;
-  const fileRef = storageRef(storage, `profileImages/${auth.currentUser.uid}`);
+  try {
+    console.log("Uploading file...");
+    const file = selectedFile.value;
+    const fileRef = storageRef(storage, `profileImages/${auth.currentUser.uid}`);
 
-  await uploadBytes(fileRef, file);
-  const downloadURL = await getDownloadURL(fileRef);
+    await uploadBytes(fileRef, file);
+    console.log("Upload successful!");
 
-  await updateDoc(doc(db, "users", auth.currentUser.uid), {
-    profileImage: downloadURL
-  });
+    const downloadURL = await getDownloadURL(fileRef);
+    console.log("Download URL:", downloadURL);
 
-  userProfileImage.value = downloadURL;
-  alert("Profile image updated successfully!");
+    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+      profileImage: downloadURL
+    });
+
+    console.log("Firestore updated successfully!");
+
+    userProfileImage.value = downloadURL;
+    previewImage.value = null;
+    selectedFile.value = null;
+
+    alert("Profile image updated successfully!");
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    alert("Failed to upload profile image.");
+  }
 };
 </script>
 
