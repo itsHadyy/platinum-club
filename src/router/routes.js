@@ -7,7 +7,6 @@ export default [
       { path: 'login', component: () => import('src/pages/auth/LoginPage.vue') },
       { path: 'register', component: () => import('src/pages/auth/RegisterPage.vue') },
       { path: 'pending', component: () => import('src/pages/auth/PendingApproval.vue') },
-      { path: 'landing', component: () => import('src/pages/auth/LandingPage.vue') },
     ]
   },
 
@@ -24,7 +23,6 @@ export default [
     ]
   },
 
-  // Catch-All for 404 Errors
   {
     path: '/:catchAll(.*)*',
     component: () => import('src/pages/ErrorNotFound.vue')

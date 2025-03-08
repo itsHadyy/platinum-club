@@ -10,19 +10,17 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
-  // ✅ Wait for authentication to be initialized before checking
   if (!authStore.isAuthReady) {
     await new Promise((resolve) => {
       const unwatch = authStore.$subscribe(() => {
         if (authStore.isAuthReady) {
-          unwatch(); // Stop watching once ready
+          unwatch();
           resolve();
         }
       });
     });
   }
 
-  // ✅ Prevent unnecessary redirects
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/auth/login');
   } else {
