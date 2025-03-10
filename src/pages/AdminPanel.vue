@@ -16,7 +16,7 @@
                 <q-banner v-if="error" class="bg-red text-white">{{ error }}</q-banner>
 
                 <q-table v-if="filteredUsers.length" flat bordered :rows="filteredUsers" :columns="columns" row-key="id"
-                    :rows-per-page-options="[5, 10, 20]">
+                    :rows-per-page-options="[5, 10, 20]"  class="scroll">
 
                     <template v-slot:body-cell-name="props">
                         <q-td :props="props">

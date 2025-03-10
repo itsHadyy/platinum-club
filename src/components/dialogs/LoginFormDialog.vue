@@ -73,7 +73,7 @@ const login = async () => {
             const userData = userDoc.data();
             authStore.login({
                 ...user,
-                name: userData.name,  // Ensure the name is set
+                name: userData.name,
                 role: userData.role
             });
 
@@ -81,7 +81,9 @@ const login = async () => {
             if (userData.role === "admin") {
                 router.push("/admin");
             } else if (userData.role === "pending") {
-                router.push("/auth/pending");
+                await auth.signOut(); // 🔹 Log out pending users
+                errorMessage.value = "Your account is pending approval. Please wait.";
+                router.push("/auth/login"); // 🔹 Redirect to login page
             } else {
                 router.push("/");
             }

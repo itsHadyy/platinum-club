@@ -5,7 +5,7 @@
                 <q-avatar size="40px">
                     <img src="https://cdn.quasar.dev/img/avatar.png" />
                 </q-avatar>
-                <div class="q-ml-md text-sm">Welcome, {{ authStore.user?.name }}!</div>
+                <div class="q-ml-md text-sm">Welcome, {{ authStore.user?.name || authStore.user?.displayName || "User" }}!</div>
                 <q-space />
                 <!-- <q-btn label="Logout" color="negative" @click="authStore.logout" /> -->
             </q-toolbar>
@@ -45,6 +45,7 @@ import LoginFormDialog from 'src/components/dialogs/LoginFormDialog.vue';
 
 const authStore = useAuthStore();
 const loginDialogRef = ref(null);
+
 
 const handleLoginSuccess = (userData) => {
     authStore.login(userData);

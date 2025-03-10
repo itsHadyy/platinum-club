@@ -29,7 +29,7 @@ export const useAuthStore = defineStore("auth", () => {
   function login(userData) {
     user.value = userData;
     isAuthenticated.value = true;
-    localStorage.setItem("authUser", JSON.stringify(userData)); // Persist session
+    localStorage.setItem("authUser", JSON.stringify(userData)); 
   }
 
   async function logout() {
@@ -39,7 +39,6 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.removeItem("authUser");
   }
 
-  // ✅ Call initAuth when store is used
   onMounted(() => {
     initAuth();
   });
