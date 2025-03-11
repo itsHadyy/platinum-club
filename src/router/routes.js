@@ -19,6 +19,7 @@ export default [
       { path: '', component: () => import('src/pages/authed/HomePage.vue') },
       { path: 'profile', component: () => import('src/pages/authed/UserProfile.vue') },
       // { path: 'amenities', component: () => import('src/pages/authed/AmenitiesPage.vue') },
+      { path: 'access-control', component: () => import('src/pages/authed/AccessControl.vue') },
       { path: 'admin', component: () => import('src/pages/AdminPanel.vue'), meta: { requiresAdmin: true } }
     ]
   },

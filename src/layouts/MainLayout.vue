@@ -62,7 +62,7 @@ const leftDrawerOpen = ref(false)
 const contactDialogVisible = ref(false);
 
 const linksList = [
-  { title: 'Access Control', icon: 'qr_code_scanner', link: '/' },
+  { title: 'Access Control', icon: 'qr_code_scanner', link: '/access-control' },
   { title: 'Bookings', icon: 'sports_basketball', link: '/' },
   { title: 'Amenities', icon: 'volunteer_activism', link: '/' },
   { title: 'Wallet', icon: 'wallet', link: '/' },

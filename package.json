@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
+    "@zxing/browser": "^0.1.5",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -23,9 +24,11 @@
     "firebase": "^11.4.0",
     "nodemailer": "^6.10.0",
     "pinia": "^2.0.11",
+    "qrcode": "^1.5.4",
     "quasar": "^2.16.0",
     "vue": "^3.4.18",
     "vue-i18n": "^9.0.0",
+    "vue-qrcode": "^2.2.2",
     "vue-router": "^4.0.0"
   },
   "devDependencies": {
