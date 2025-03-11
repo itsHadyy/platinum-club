@@ -31,7 +31,11 @@ export const useAuthStore = defineStore("auth", () => {
         user.value = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          displayName: firestoreData?.name || firebaseUser.displayName || storedUser?.displayName || "User",
+          // change the display name to this for full name: displayName: firestoreData ? `${firestoreData.firstName || ""} ${firestoreData.middleName || ""} ${firestoreData.lastName || ""}`.trim() : firebaseUser.displayName || storedUser?.displayName || "User",
+          
+          displayName: firestoreData
+            ? `${firestoreData.firstName || ""} `.trim()
+            : firebaseUser.displayName || storedUser?.displayName || "User",
           photoURL: firebaseUser.photoURL,
           role: firestoreData?.role || storedUser?.role || "user",
         };

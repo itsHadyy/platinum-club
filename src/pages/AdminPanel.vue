@@ -16,11 +16,12 @@
                 <q-banner v-if="error" class="bg-red text-white">{{ error }}</q-banner>
 
                 <q-table v-if="filteredUsers.length" flat bordered :rows="filteredUsers" :columns="columns" row-key="id"
-                    :rows-per-page-options="[5, 10, 20]"  class="scroll">
-
+                    :rows-per-page-options="[5, 10, 20]" class="scroll">
                     <template v-slot:body-cell-name="props">
                         <q-td :props="props">
-                            <q-btn flat dense @click="viewUserDetails(props.row)">{{ props.row.name }}</q-btn>
+                            <q-btn flat dense @click="viewUserDetails(props.row)">
+                                {{ props.row.firstName }} {{ props.row.middleName }} {{ props.row.lastName }}
+                            </q-btn>
                         </q-td>
                     </template>
 
@@ -41,8 +42,8 @@
                             <q-btn v-if="props.row.role === 'user'" color="warning" icon="admin_panel_settings" dense
                                 round class="q-mr-sm" @click="confirmAdminPassword(props.row.id)" />
 
-                            <q-btn color="negative" icon="delete" dense round @click="confirmDeleteUser(props.row.id)"
-                                class="q-mr-sm" />
+                            <q-btn color="negative" icon="delete" dense round class="q-mr-sm"
+                                @click="confirmDeleteUser(props.row.id)" />
                         </q-td>
                     </template>
 
@@ -60,19 +61,29 @@
         <!-- User Details Dialog -->
         <q-dialog v-model="showUserDialog">
             <q-card class="q-pa-md">
-                <q-card-section>
-                    <div class="text-h6">User Details</div>
+                <q-card-section class="text-center">
+                    <q-avatar size="100px">
+                        <img :src="selectedUser?.profileImage || defaultProfileImage" />
+                    </q-avatar>
+
+                    <q-btn v-if="isAdmin" flat dense icon="edit" class="q-mt-sm" color="primary">
+                        <q-tooltip>Change Image</q-tooltip>
+                        <input type="file" accept="image/*" @change="updateUserImage" class="hidden-file-input">
+                    </q-btn>
                 </q-card-section>
+
                 <q-card-section>
-                    <p><strong>Name:</strong> {{ selectedUser?.name }}</p>
+                    <p><strong>Name:</strong> {{ selectedUser?.firstName }} {{ selectedUser?.middleName }} {{
+                        selectedUser?.lastName }}</p>
                     <p><strong>Email:</strong> {{ selectedUser?.email }}</p>
-                    <p><strong>Phone Number:</strong> {{ selectedUser.phone }}</p>
+                    <p><strong>Phone Number:</strong> {{ selectedUser?.phone }}</p>
                     <p><strong>Membership ID:</strong> {{ selectedUser?.membershipId }}</p>
                     <p><strong>National ID:</strong> {{ selectedUser?.nationalId }}</p>
                     <p><strong>Date of Birth:</strong> {{ selectedUser?.dob }}</p>
                     <p><strong>Role:</strong> {{ selectedUser?.role }}</p>
                     <p v-if="selectedUser?.createdAt"><strong>Joined:</strong> {{ selectedUser.createdAt }}</p>
                 </q-card-section>
+
                 <q-card-actions>
                     <q-btn flat label="Close" color="primary" v-close-popup />
                 </q-card-actions>
@@ -81,10 +92,10 @@
     </q-page>
 </template>
 
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from 'src/boot/firebase';
 
 const users = ref([]);
@@ -93,10 +104,14 @@ const error = ref("");
 const selectedRole = ref("all");
 const showUserDialog = ref(false);
 const selectedUser = ref(null);
+const isAdmin = ref(false);
+const storage = getStorage();
 const ADMIN_PASSWORD = "Admin1234"; // Change this for security later
 
+const defaultProfileImage = "https://cdn.quasar.dev/img/avatar5.png";
+
 const columns = [
-    { name: "name", label: "Name", field: "name", align: "left" },
+    { name: "name", label: "Name", field: "firstName", align: "left" },
     { name: "email", label: "Email", field: "email", align: "left" },
     { name: "role", label: "Role", field: "role", align: "left" },
     { name: "actions", label: "Actions", align: "center" },
@@ -173,12 +188,28 @@ const viewUserDetails = (user) => {
     showUserDialog.value = true;
 };
 
+const updateUserImage = async (event) => {
+    if (!selectedUser.value) return alert("No user selected!");
+
+    const file = event.target.files[0];
+    if (!file) return alert("No file selected!");
+
+    const fileRef = storageRef(storage, `profileImages/${selectedUser.value.id}_${file.name}`);
+
+    try {
+        const snapshot = await uploadBytes(fileRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        await setDoc(doc(db, "users", selectedUser.value.id), { profileImage: downloadURL }, { merge: true });
+
+        selectedUser.value.profileImage = downloadURL; // Update UI instantly
+        fetchUsers(); // Refresh users list
+        alert("Image updated successfully!");
+    } catch (err) {
+        console.error("Error uploading image:", err);
+        alert("Failed to upload image.");
+    }
+};
+
 onMounted(fetchUsers);
 </script>
-
-<style scoped>
-.q-card {
-    max-width: 800px;
-    margin: auto;
-}
-</style>

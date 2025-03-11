@@ -1,34 +1,65 @@
 <template>
     <q-page class="row items-center justify-center">
-        <q-card style="width: 500px; max-width: 90vw;" class="q-pa-md">
+        <q-card style="width: 600px; max-width: 90vw;" class="q-pa-md">
             <q-card-section>
                 <div class="text-h6 text-center">Register</div>
             </q-card-section>
 
             <q-card-section>
-                <q-form @submit="register" class="q-gutter-xsm">
-                    <q-input v-model="formData.name" label="Name" outlined :rules="[requiredRule]" />
-                    <q-input v-model="formData.email" label="Email" type="email" outlined :rules="[requiredRule, emailRule]" />
+                <q-form @submit="register" class="q-gutter-md">
+
+                    <!-- Personal Information -->
+                    <div class="text-subtitle1 text-bold">Personal Information</div>
+                    <q-space />
+                    <div class="row q-col-gutter-md q-ml-xs">
+                        <q-input class="col-6" v-model="formData.firstName" label="First Name" outlined
+                            :rules="[requiredRule]" />
+                        <q-input class="col-6" v-model="formData.middleName" label="Middle Name (Optional)" outlined />
+                    </div>
+                    <q-input class="col-6" v-model="formData.lastName" label="Last Name" outlined
+                        :rules="[requiredRule]" />
+
+                    <q-input v-model="formData.email" label="Email" type="email" outlined
+                        :rules="[requiredRule, emailRule]" />
                     <q-input v-model="formData.phone" label="Phone Number" outlined :rules="[requiredRule]" />
+                    <q-input v-model="formData.dob" label="Date of Birth" type="date" outlined
+                        :rules="[requiredRule]" />
+
+                    <!-- Account Information -->
+                    <div class="text-subtitle1 text-bold">Account Information</div>
+                    <q-separator />
                     <q-input v-model="formData.membershipId" label="Membership ID" outlined :rules="[requiredRule]" />
-                    <q-input v-model="formData.nationalId" label="National ID" type="text" outlined 
+                    <q-input v-model="formData.nationalId" label="National ID" type="text" outlined
                         :rules="[requiredRule, nationalIdRule]" />
-                    <q-input v-model="formData.dob" label="Date of Birth" type="date" outlined :rules="[requiredRule]" />
-                    <q-input v-model="formData.password" label="Password" type="password" outlined :rules="[requiredRule, passwordRule]" />
-                    <q-input v-model="formData.confirmPassword" label="Confirm Password" type="password" outlined 
+
+                    <q-input v-model="formData.password" label="Password" type="password" outlined
+                        :rules="[requiredRule, passwordRule]" />
+                    <q-input v-model="formData.confirmPassword" label="Confirm Password" type="password" outlined
                         :rules="[requiredRule, confirmPasswordRule]" />
 
-                    <q-btn type="submit" label="Register" color="secondary" class="full-width" />
+                    <!-- Image Upload -->
+                    <div class="text-subtitle1 text-bold">Profile Picture</div>
+                    <q-separator />
+                    <q-file v-model="formData.image" label="Upload Profile Picture" accept="image/*" outlined
+                        @update:model-value="previewImage">
+                        <template v-slot:prepend>
+                            <q-icon name="cloud_upload" />
+                        </template>
+                    </q-file>
+                    <q-img v-if="imagePreview" :src="imagePreview" class="q-mt-md"
+                        style="height: 100px; width: 100px; border-radius: 50%;" />
+
+                    <!-- Submit Button -->
+                    <q-btn type="submit" label="Register" color="primary" class="full-width" />
+
+                    <!-- Error Message -->
+                    <q-banner v-if="errorMessage" class="bg-red text-white">{{ errorMessage }}</q-banner>
+
+                    <!-- Login Link -->
+                    <div class="text-center q-mt-md">
+                        <q-btn flat label="Already have an account? Login" color="secondary" @click="openLoginDialog" />
+                    </div>
                 </q-form>
-            </q-card-section>
-
-            <q-card-section v-if="errorMessage">
-                <q-banner class="bg-red text-white">{{ errorMessage }}</q-banner>
-            </q-card-section>
-
-            <q-card-section class="text-center">
-                <q-btn flat label="Already have an account? Login" color="primary" @click="openLoginDialog"
-                    class="text-secondary" />
             </q-card-section>
         </q-card>
 
@@ -42,21 +73,26 @@ import { useRouter } from 'vue-router';
 import { auth, db } from 'src/boot/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+// import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import LoginFormDialog from 'src/components/dialogs/LoginFormDialog.vue';
 
 const router = useRouter();
 const loginDialogRef = ref(null);
 const loading = ref(false);
+const imagePreview = ref(null);
 
 const formData = reactive({
-    name: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
     email: '',
+    phone: '',
+    dob: '',
     membershipId: '',
     nationalId: '',
-    dob: '',
-    phone: '',
     password: '',
     confirmPassword: '',
+    image: null
 });
 
 // Validation Rules
@@ -69,42 +105,66 @@ const nationalIdRule = (val) => /^\d{14}$/.test(val) || 'National ID must be exa
 // Error message state
 const errorMessage = ref('');
 
+const previewImage = () => {
+    if (formData.image) {
+        const reader = new FileReader();
+        reader.onload = (e) => imagePreview.value = e.target.result;
+        reader.readAsDataURL(formData.image);
+    }
+};
+
 const register = async () => {
     if (formData.password !== formData.confirmPassword) {
         errorMessage.value = "Passwords do not match!";
         return;
     }
 
-    loading.value = true; // Start loading
+    loading.value = true;
 
     try {
-        // Register user in Firebase Authentication
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         const user = userCredential.user;
 
-        // Save user info in Firestore with role "pending"
+        // Temporarily skipping image upload
+        let imageUrl = null;
+
+        /*
+        if (formData.image) {
+            const fileRef = storageRef(storage, `profile_pictures/${user.uid}`);
+            await uploadBytes(fileRef, formData.image);
+            imageUrl = await getDownloadURL(fileRef);
+        }
+        */
+
         await setDoc(doc(db, "users", user.uid), {
-            name: formData.name,
+            firstName: formData.firstName,
+            middleName: formData.middleName,
+            lastName: formData.lastName,
             email: formData.email,
+            phone: formData.phone,
+            dob: formData.dob,
             membershipId: formData.membershipId,
             nationalId: formData.nationalId,
-            dob: formData.dob,
-            role: "pending",// Users cannot assign themselves as admins
-            phone: formData.phone,  
+            role: "pending",
+            imageUrl: imageUrl,  // Will be null for now
             createdAt: new Date()
         });
 
-        Object.assign(formData, { name: '', email: '', membershipId: '', nationalId: '', phone: '', dob: '', password: '', confirmPassword: '' });
+        console.log("User data saved successfully!");
+
+        // Reset form
+        Object.assign(formData, { firstName: '', middleName: '', lastName: '', email: '', phone: '', dob: '', membershipId: '', nationalId: '', password: '', confirmPassword: '', image: null });
+        imagePreview.value = null;
 
         router.push('/auth/pending');
     } catch (error) {
+        console.error("Error during registration:", error);
         errorMessage.value = firebaseErrorHandler(error.code);
     } finally {
-        loading.value = false; // Stop loading
+        loading.value = false;
     }
 };
 
-// Firebase Error Handling Function
 const firebaseErrorHandler = (code) => {
     const errors = {
         "auth/email-already-in-use": "This email is already registered.",
@@ -119,7 +179,3 @@ const openLoginDialog = () => {
     loginDialogRef.value.open();
 };
 </script>
-
-<style scoped>
-/* Add any custom styles here */
-</style>
