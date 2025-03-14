@@ -58,18 +58,21 @@
             </q-card-section>
         </q-card>
 
-        <!-- User Details Dialog -->
         <q-dialog v-model="showUserDialog">
             <q-card class="q-pa-md">
                 <q-card-section class="text-center">
-                    <q-avatar size="100px">
-                        <img :src="selectedUser?.profileImage || defaultProfileImage" />
+                    <q-avatar size="120px">
+                        <img :src="selectedUser?.profileImage || defaultProfileImage"
+                            :key="selectedUser?.profileImage" />
                     </q-avatar>
 
-                    <q-btn v-if="isAdmin" flat dense icon="edit" class="q-mt-sm" color="primary">
+                    <q-btn v-if="isAdmin" flat dense icon="edit" class="q-mt-sm" color="primary"
+                        @click="triggerFileInput">
                         <q-tooltip>Change Image</q-tooltip>
-                        <input type="file" accept="image/*" @change="updateUserImage" class="hidden-file-input">
                     </q-btn>
+
+                    <input ref="fileInput" type="file" accept="image/*" @change="updateUserImage"
+                        class="hidden-file-input" />
                 </q-card-section>
 
                 <q-card-section>
@@ -81,11 +84,30 @@
                     <p><strong>National ID:</strong> {{ selectedUser?.nationalId }}</p>
                     <p><strong>Date of Birth:</strong> {{ selectedUser?.dob }}</p>
                     <p><strong>Role:</strong> {{ selectedUser?.role }}</p>
+
+                    <p>
+                        <strong>Image URL:</strong>
+                        <button @click="copyImageUrl" title="Copy URL"
+                            style="border: none; background: none; cursor: pointer;">
+                            📋
+                        </button>
+                        <button onclick="toggleUrlVisibility()" title="View URL"
+                            style="border: none; background: none; cursor: pointer;">
+                            👁️
+                        </button>
+                        <span style="display: flex; align-items: center;">
+                            <span id="imageUrl"
+                                style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ selectedUser?.profileImage }}
+                            </span>
+                        </span>
+                    </p>
+
                     <p v-if="selectedUser?.createdAt"><strong>Joined:</strong> {{ selectedUser.createdAt }}</p>
                 </q-card-section>
 
                 <q-card-actions>
-                    <q-btn flat label="Close" color="primary" v-close-popup />
+                    <q-btn flat label="Close" color="primary" v-close-popup class="bg-secondary" />
                 </q-card-actions>
             </q-card>
         </q-dialog>
@@ -94,21 +116,28 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db } from 'src/boot/firebase';
+import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from 'src/boot/firebase';
 
+// Reactive State
 const users = ref([]);
 const loading = ref(true);
 const error = ref("");
 const selectedRole = ref("all");
 const showUserDialog = ref(false);
 const selectedUser = ref(null);
-const isAdmin = ref(false);
-const storage = getStorage();
-const ADMIN_PASSWORD = "Admin1234"; // Change this for security later
+const isAdmin = true;
+const fileInput = ref(null);
 
+// Static Data
+const ADMIN_PASSWORD = "Admin1234"; // Change this for security later
 const defaultProfileImage = "https://cdn.quasar.dev/img/avatar5.png";
+
+// Open File Input
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
 
 const columns = [
     { name: "name", label: "Name", field: "firstName", align: "left" },
@@ -188,28 +217,55 @@ const viewUserDetails = (user) => {
     showUserDialog.value = true;
 };
 
+let isUrlVisible = false;
+
+const copyImageUrl = () => {
+    const imageUrl = selectedUser.value?.profileImage || '';
+
+    if (!imageUrl) {
+        alert('No image URL found');
+        return;
+    }
+
+    navigator.clipboard.writeText(imageUrl)
+        .then(() => alert('Image URL copied to clipboard!'))
+        .catch(err => console.error('Failed to copy: ', err));
+};
+
+window.toggleUrlVisibility = function () {
+    const urlElement = document.getElementById('imageUrl');
+    isUrlVisible = !isUrlVisible;
+    urlElement.style.whiteSpace = isUrlVisible ? 'normal' : 'nowrap';
+    urlElement.style.maxWidth = isUrlVisible ? 'none' : 'auto';
+}
+
 const updateUserImage = async (event) => {
-    if (!selectedUser.value) return alert("No user selected!");
-
     const file = event.target.files[0];
-    if (!file) return alert("No file selected!");
-
-    const fileRef = storageRef(storage, `profileImages/${selectedUser.value.id}_${file.name}`);
+    if (!file) return;
 
     try {
+        const fileRef = storageRef(storage, `profile_pictures/${selectedUser.value.id}`);
+
         const snapshot = await uploadBytes(fileRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
 
-        await setDoc(doc(db, "users", selectedUser.value.id), { profileImage: downloadURL }, { merge: true });
+        const imageUrl = await getDownloadURL(snapshot.ref);
 
-        selectedUser.value.profileImage = downloadURL; // Update UI instantly
-        fetchUsers(); // Refresh users list
-        alert("Image updated successfully!");
-    } catch (err) {
-        console.error("Error uploading image:", err);
-        alert("Failed to upload image.");
+        await updateDoc(doc(db, 'users', selectedUser.value.id), {
+            imageUrl: imageUrl
+        });
+
+        selectedUser.value.profileImage = imageUrl;
+
+    } catch (error) {
+        console.error('Error updating user image:', error);
     }
 };
 
 onMounted(fetchUsers);
 </script>
+
+<style scoped>
+.hidden-file-input {
+    display: none;
+}
+</style>

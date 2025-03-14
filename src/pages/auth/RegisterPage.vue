@@ -1,5 +1,5 @@
 <template>
-    <q-page class="row items-center justify-center">
+    <q-page class="row items-center justify-center q-mt-lg q-mb-lg">
         <q-card style="width: 600px; max-width: 90vw;" class="q-pa-md">
             <q-card-section>
                 <div class="text-h6 text-center">Register</div>
@@ -50,7 +50,7 @@
                         style="height: 100px; width: 100px; border-radius: 50%;" />
 
                     <!-- Submit Button -->
-                    <q-btn type="submit" label="Register" color="primary" class="full-width" />
+                    <q-btn type="submit" label="Register" color="secondary" class="q-ma-auto" />
 
                     <!-- Error Message -->
                     <q-banner v-if="errorMessage" class="bg-red text-white">{{ errorMessage }}</q-banner>
@@ -70,10 +70,10 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { auth, db } from 'src/boot/firebase';
+import { auth, db, storage } from 'src/boot/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-// import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import LoginFormDialog from 'src/components/dialogs/LoginFormDialog.vue';
 
 const router = useRouter();
@@ -125,17 +125,15 @@ const register = async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         const user = userCredential.user;
 
-        // Temporarily skipping image upload
+        // Upload Image to Firebase Storage
         let imageUrl = null;
-
-        /*
         if (formData.image) {
             const fileRef = storageRef(storage, `profile_pictures/${user.uid}`);
-            await uploadBytes(fileRef, formData.image);
-            imageUrl = await getDownloadURL(fileRef);
+            const snapshot = await uploadBytes(fileRef, formData.image);
+            imageUrl = await getDownloadURL(snapshot.ref);
         }
-        */
 
+        // Save User Data in Firestore
         await setDoc(doc(db, "users", user.uid), {
             firstName: formData.firstName,
             middleName: formData.middleName,
@@ -146,7 +144,7 @@ const register = async () => {
             membershipId: formData.membershipId,
             nationalId: formData.nationalId,
             role: "pending",
-            imageUrl: imageUrl,  // Will be null for now
+            imageUrl: imageUrl, // Now the image URL will be saved here
             createdAt: new Date()
         });
 
