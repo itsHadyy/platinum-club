@@ -1,12 +1,12 @@
 <template>
-    <q-page class="column flex-center">
+    <q-page class="column flex-center q-mt-lg">
         <q-card class="q-pa-md text-center">
             <q-card-section>
                 <div class="text-h6">Account Pending Approval</div>
                 <p>Your account is under review by the admin. You will be notified once approved.</p>
             </q-card-section>
             <q-card-actions align="center">
-                <q-btn label="Back to Login" color="primary" @click="goToLogin" unelevated />
+                <q-btn label="Back to Login" color="secondary" @click="goToLogin" unelevated />
             </q-card-actions>
         </q-card>
     </q-page>

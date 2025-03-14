@@ -63,7 +63,7 @@ const contactDialogVisible = ref(false);
 
 const linksList = [
   { title: 'Access Control', icon: 'qr_code_scanner', link: '/access-control' },
-  { title: 'Bookings', icon: 'sports_basketball', link: '/' },
+  { title: 'Bookings', icon: 'sports_basketball', link: '/bookings-dashboard' },
   { title: 'Amenities', icon: 'volunteer_activism', link: '/' },
   { title: 'Wallet', icon: 'wallet', link: '/' },
   { title: 'Dining', icon: 'dining', link: '/' },

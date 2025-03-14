@@ -46,11 +46,15 @@
                             <q-icon name="cloud_upload" />
                         </template>
                     </q-file>
-                    <q-img v-if="imagePreview" :src="imagePreview" class="q-mt-md"
-                        style="height: 100px; width: 100px; border-radius: 50%;" />
+                    
+                    <div align="center">
+                        <q-img v-if="imagePreview" :src="imagePreview" class="q-mt-md"
+                            style="height: 100px; width: 100px; border-radius: 50%;" />
+                    </div>
 
-                    <!-- Submit Button -->
-                    <q-btn type="submit" label="Register" color="secondary" class="q-ma-auto" />
+                    <div align="center">
+                        <q-btn type="submit" label="Register" color="secondary" class="q-ma-auto" />
+                    </div>
 
                     <!-- Error Message -->
                     <q-banner v-if="errorMessage" class="bg-red text-white">{{ errorMessage }}</q-banner>

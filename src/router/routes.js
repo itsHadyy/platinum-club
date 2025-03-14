@@ -17,10 +17,20 @@ export default [
     meta: { requiresAuth: true },
     children: [
       { path: '', component: () => import('src/pages/authed/HomePage.vue') },
+      { path: 'admin', component: () => import('src/pages/AdminPanel.vue'), meta: { requiresAdmin: true } },
       { path: 'profile', component: () => import('src/pages/authed/UserProfile.vue') },
       // { path: 'amenities', component: () => import('src/pages/authed/AmenitiesPage.vue') },
       { path: 'access-control', component: () => import('src/pages/authed/AccessControl.vue') },
-      { path: 'admin', component: () => import('src/pages/AdminPanel.vue'), meta: { requiresAdmin: true } }
+      { path: 'bookings-dashboard', component: () => import('src/pages/authed/BookingDashboard.vue') },
+      {
+        path: '/booking/court/:courtType',
+        component: () => import('src/pages/authed/CourtBookingPage.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/booking/summary',
+        component: () => import('src/pages/authed/BookingSummaryPage.vue')
+      },
     ]
   },
 
