@@ -5,7 +5,7 @@
         <q-avatar size="40px">
           <img :src="userProfileImage || defaultProfileImage" />
         </q-avatar>
-        <div class="q-ml-md text-sm">Welcome, {{ userName || "User" }}!</div>
+        <div class="q-ml-md text-sm">Welcome, {{ userName|| "User"}}!</div>
         <q-space />
       </q-toolbar>
       

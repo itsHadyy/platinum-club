@@ -29,8 +29,13 @@ export default [
       },
       {
         path: '/booking/summary',
+        name: 'BookingSummaryPage',
         component: () => import('src/pages/authed/BookingSummaryPage.vue')
       },
+      {
+        path: '/my-bookings',
+        component: () => import('src/pages/authed/MyBookingsPage.vue')
+    }
     ]
   },
 

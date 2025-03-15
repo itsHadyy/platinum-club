@@ -7,16 +7,21 @@
             <q-card class="q-pa-md col-5" clickable @click="openCourtDialog">
                 <q-card-section class="text-center">
                     <q-icon name="sports_tennis" size="60px" />
-                    <div class="text-h6">Book a Court</div>
+                    <div class="text-h6">Courts</div>
                 </q-card-section>
             </q-card>
 
             <q-card class="q-pa-md col-5" clickable>
                 <q-card-section class="text-center">
                     <q-icon name="school" size="60px" />
-                    <div class="text-h6">Book an Academy</div>
+                    <div class="text-h6">Academies</div>
                 </q-card-section>
             </q-card>
+        </div>
+
+        <!-- My Bookings Button -->
+        <div class="row justify-center q-mt-lg">
+            <q-btn color="secondary" label="View My Bookings" @click="goToMyBookings" />
         </div>
 
         <!-- Dialog for selecting court type -->
@@ -30,18 +35,20 @@ import CourtTypeDialog from 'src/components/dialogs/CourtTypeDialog.vue';
 import { useRouter } from 'vue-router';
 
 const showCourtDialog = ref(false);
+const router = useRouter();
 
 const openCourtDialog = () => {
     showCourtDialog.value = true;
 };
-
-const router = useRouter();
 
 const handleCourtSelection = (courtType) => {
     showCourtDialog.value = false;
     router.push(`/booking/court/${courtType}`);
 };
 
+const goToMyBookings = () => {
+    router.push('/my-bookings');
+};
 </script>
 
 <style>
