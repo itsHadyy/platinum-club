@@ -25,5 +25,9 @@ defineProps({
     modelValue: Boolean
 });
 
-const courtTypes = ['Padel', 'Tennis', 'Basketball', 'Soccer', 'Golf'];
+import { useSportsStore } from "stores/sportsStore";
+
+const sportsStore = useSportsStore();
+const courtTypes = sportsStore.sportsOptions;
+
 </script>
