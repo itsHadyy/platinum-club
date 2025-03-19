@@ -17,7 +17,7 @@ export default [
     meta: { requiresAuth: true },
     children: [
       { path: '', component: () => import('src/pages/authed/HomePage.vue') },
-      { path: 'admin', component: () => import('src/pages/AdminPanel.vue'), meta: { requiresAdmin: true } },
+      // { path: 'admin', component: () => import('src/pages/AdminPanel.vue'), meta: { requiresAdmin: true } },
       { path: 'profile', component: () => import('src/pages/authed/UserProfile.vue') },
       // { path: 'amenities', component: () => import('src/pages/authed/AmenitiesPage.vue') },
       { path: 'access-control', component: () => import('src/pages/authed/AccessControl.vue') },
@@ -35,7 +35,20 @@ export default [
       {
         path: '/my-bookings',
         component: () => import('src/pages/authed/MyBookingsPage.vue')
-    }
+      }
+    ]
+  },
+
+  // Layout for Admin Users
+  {
+    path: '/admin',
+    component: () => import('src/layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      { path: 'dashboard', component: () => import('src/pages/admin/AdminDashboard.vue') },
+      { path: 'bookings', component: () => import('src/pages/admin/AdminBookings.vue') },
+      { path: 'courts', component: () => import('src/pages/admin/AdminCourts.vue') },
+      { path: 'users', component: () => import('src/pages/admin/AdminUsers.vue') }
     ]
   },
 

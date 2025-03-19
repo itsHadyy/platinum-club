@@ -20,6 +20,9 @@
                     <q-item-label>
                         <strong>Court:</strong> {{ booking.court }}
                     </q-item-label>
+                    <q-item-label><strong>Sport:</strong> {{ booking.sport }}</q-item-label>
+                    <q-item-label><strong>Court Type:</strong> {{ booking.courtType }}</q-item-label>
+                    <q-item-label><strong>Court Number:</strong> {{ booking.courtNumber }}</q-item-label>
                     <q-item-label>
                         <strong>Price:</strong> {{ booking.price }}
                     </q-item-label>
