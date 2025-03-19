@@ -2,7 +2,7 @@
     <q-page class="q-pa-md">
         <q-card class="q-pa-md shadow-2">
             <q-card-section>
-                <div class="text-h5 text-center text-primary">Manage Users</div>
+                <div class="text-h5 text-center text-secondary">Admin Panel</div>
             </q-card-section>
 
             <!-- Role Filter -->
@@ -38,10 +38,18 @@
                         <q-td :props="props">
                             <q-btn v-if="props.row.role === 'pending'" color="positive" icon="check" dense round
                                 class="q-mr-sm" @click="updateRole(props.row.id, 'user')" />
+
                             <q-btn v-if="props.row.role === 'user'" color="warning" icon="admin_panel_settings" dense
                                 round class="q-mr-sm" @click="confirmAdminPassword(props.row.id)" />
+
                             <q-btn color="negative" icon="delete" dense round class="q-mr-sm"
                                 @click="confirmDeleteUser(props.row.id)" />
+                        </q-td>
+                    </template>
+
+                    <template v-slot:body-cell-details="props">
+                        <q-td :props="props">
+                            <q-btn icon="visibility" flat dense @click="viewUserDetails(props.row)" />
                         </q-td>
                     </template>
                 </q-table>
@@ -54,22 +62,52 @@
             <q-card class="q-pa-md">
                 <q-card-section class="text-center">
                     <q-avatar size="120px">
-                        <img :src="selectedUser?.profileImage || defaultProfileImage" />
+                        <img :src="selectedUser?.profileImage || defaultProfileImage"
+                            :key="selectedUser?.profileImage" />
                     </q-avatar>
+
+                    <q-btn v-if="isAdmin" flat dense icon="edit" class="q-mt-sm" color="primary"
+                        @click="triggerFileInput">
+                        <q-tooltip>Change Image</q-tooltip>
+                    </q-btn>
+
+                    <input ref="fileInput" type="file" accept="image/*" @change="updateUserImage"
+                        class="hidden-file-input" />
                 </q-card-section>
 
                 <q-card-section>
                     <p><strong>Name:</strong> {{ selectedUser?.firstName }} {{ selectedUser?.middleName }} {{
                         selectedUser?.lastName }}</p>
                     <p><strong>Email:</strong> {{ selectedUser?.email }}</p>
-                    <p><strong>Phone:</strong> {{ selectedUser?.phone }}</p>
+                    <p><strong>Phone Number:</strong> {{ selectedUser?.phone }}</p>
                     <p><strong>Membership ID:</strong> {{ selectedUser?.membershipId }}</p>
+                    <p><strong>National ID:</strong> {{ selectedUser?.nationalId }}</p>
                     <p><strong>Date of Birth:</strong> {{ selectedUser?.dob }}</p>
                     <p><strong>Role:</strong> {{ selectedUser?.role }}</p>
+
+                    <p>
+                        <strong>Image URL:</strong>
+                        <button @click="copyImageUrl" title="Copy URL"
+                            style="border: none; background: none; cursor: pointer;">
+                            📋
+                        </button>
+                        <button onclick="toggleUrlVisibility()" title="View URL"
+                            style="border: none; background: none; cursor: pointer;">
+                            👁️
+                        </button>
+                        <span style="display: flex; align-items: center;">
+                            <span id="imageUrl"
+                                style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ selectedUser?.profileImage }}
+                            </span>
+                        </span>
+                    </p>
+
+                    <p v-if="selectedUser?.createdAt"><strong>Joined:</strong> {{ selectedUser.createdAt }}</p>
                 </q-card-section>
 
                 <q-card-actions>
-                    <q-btn flat label="Close" color="primary" v-close-popup />
+                    <q-btn flat label="Close" color="primary" v-close-popup class="bg-secondary" />
                 </q-card-actions>
             </q-card>
         </q-dialog>
@@ -78,24 +116,35 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from 'src/boot/firebase';
+import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from 'src/boot/firebase';
 
+// Reactive State
 const users = ref([]);
 const loading = ref(true);
 const error = ref("");
 const selectedRole = ref("all");
 const showUserDialog = ref(false);
 const selectedUser = ref(null);
+const isAdmin = true;
+const fileInput = ref(null);
 
-const ADMIN_PASSWORD = "Admin1234"; // Update this for security
+// Static Data
+const ADMIN_PASSWORD = "Admin1234"; // Change this for security later
 const defaultProfileImage = "https://cdn.quasar.dev/img/avatar5.png";
+
+// Open File Input
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
 
 const columns = [
     { name: "name", label: "Name", field: "firstName", align: "left" },
     { name: "email", label: "Email", field: "email", align: "left" },
     { name: "role", label: "Role", field: "role", align: "left" },
-    { name: "actions", label: "Actions", align: "center" }
+    { name: "actions", label: "Actions", align: "center" },
+    { name: "details", label: "Details", align: "center" }
 ];
 
 const roleOptions = [
@@ -168,7 +217,55 @@ const viewUserDetails = (user) => {
     showUserDialog.value = true;
 };
 
+let isUrlVisible = false;
+
+const copyImageUrl = () => {
+    const imageUrl = selectedUser.value?.profileImage || '';
+
+    if (!imageUrl) {
+        alert('No image URL found');
+        return;
+    }
+
+    navigator.clipboard.writeText(imageUrl)
+        .then(() => alert('Image URL copied to clipboard!'))
+        .catch(err => console.error('Failed to copy: ', err));
+};
+
+window.toggleUrlVisibility = function () {
+    const urlElement = document.getElementById('imageUrl');
+    isUrlVisible = !isUrlVisible;
+    urlElement.style.whiteSpace = isUrlVisible ? 'normal' : 'nowrap';
+    urlElement.style.maxWidth = isUrlVisible ? 'none' : 'auto';
+}
+
+const updateUserImage = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+        const fileRef = storageRef(storage, `profile_pictures/${selectedUser.value.id}`);
+
+        const snapshot = await uploadBytes(fileRef, file);
+
+        const imageUrl = await getDownloadURL(snapshot.ref);
+
+        await updateDoc(doc(db, 'users', selectedUser.value.id), {
+            imageUrl: imageUrl
+        });
+
+        selectedUser.value.profileImage = imageUrl;
+
+    } catch (error) {
+        console.error('Error updating user image:', error);
+    }
+};
+
 onMounted(fetchUsers);
 </script>
 
-<style scoped></style>
+<style scoped>
+.hidden-file-input {
+    display: none;
+}
+</style>

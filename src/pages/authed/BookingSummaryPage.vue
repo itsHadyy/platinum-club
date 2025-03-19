@@ -9,14 +9,15 @@
         <div class="text-subtitle1 text-bold q-mb-lg">Confirm Your Booking</div>
 
         <q-card-section>
-            <div class="text-subtitle1">Court Type:</div>
-            <p>{{ courtType }}</p>
 
             <div class="text-subtitle1">Date:</div>
             <p>{{ formattedDay }}</p>
 
             <div class="text-subtitle1">Court:</div>
-            <p>Court {{ court }}</p>
+            <p>{{ court }}</p>
+
+            <div class="text-subtitle1">Sport:</div>
+            <p>{{ sport }}</p>
 
             <div class="text-subtitle1">Time Slots:</div>
             <ul>
@@ -45,11 +46,11 @@ const router = useRouter();
 
 const auth = getAuth();
 
-const courtType = route.query.courtType;
 const day = route.query.day;
 const court = route.query.court;
 const slots = JSON.parse(route.query.slots);
 const price = route.query.price;
+const sport = route.query.sport;
 
 // ✅ Correctly format the date
 const formattedDay = computed(() => {
@@ -81,11 +82,11 @@ const confirmBooking = async () => {
             userId: user.uid,
             userName: `${userData.firstName} ${userData.middleName || ''} ${userData.lastName}`,
             phone: userData.phone || 'N/A',
-            courtType,
             date: new Date(day).toISOString().split('T')[0],
-            court: parseInt(court),
+            court,
             slots,
             price: parseInt(price),
+            sport,
         });
 
         alert('Booking Confirmed ✅');
