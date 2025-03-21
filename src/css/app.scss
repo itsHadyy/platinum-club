@@ -1,4 +1,4 @@
-body{
+body {
     color: $secondary;
 }
 
@@ -97,7 +97,7 @@ body{
     border-radius: 10px;
 }
 
-.logo-header{
+.logo-header {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -106,23 +106,60 @@ body{
     font-size: 18px;
 }
 
-.logo-header img{
+.logo-header img {
     width: 40px;
 }
 
-.location{
+.location {
     display: grid;
     grid-template-columns: 1fr 1fr;
     align-items: center;
     justify-content: center;
 }
-.location p{
+
+.location p {
     margin: 0;
 }
-.q-btn{
+
+.q-btn {
     font-size: smaller;
 }
 
-.q-page{
+.q-page {
     min-height: auto !important;
+}
+
+.upcoming-bookings-card {
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.header {
+    background-color: #f5f5f5;
+    padding: 16px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.booking-item {
+    padding: 12px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+}
+
+.status-badge {
+    min-width: auto;
+    width: fit-content;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.badge-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }

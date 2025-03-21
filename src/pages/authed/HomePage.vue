@@ -10,6 +10,8 @@
       </q-toolbar>
       
       <CarouselComponent />
+
+      <UpcomingBookingsCard />
     </template>
   </div>
 </template>
@@ -21,6 +23,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 import CarouselComponent from 'src/components/CarouselComponent.vue';
+import UpcomingBookingsCard from 'src/components/UpcomingBookingsCard.vue';
 
 // Firebase instances
 const auth = getAuth();

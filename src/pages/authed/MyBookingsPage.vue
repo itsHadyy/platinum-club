@@ -15,7 +15,9 @@
                     class="q-mb-sm" />
                 <q-select v-model="filters.court" :options="courtOptions" label="Filter by Court" outlined dense
                     class="q-mb-sm" />
-                <q-btn label="Apply Filters" color="primary" type="submit" class="full-width" />
+                <div class="flex justify-center">
+                    <q-btn label="Apply Filters" color="secondary" type="submit" />
+                </div>
             </q-form>
         </q-card>
 
@@ -24,19 +26,13 @@
             <q-spinner size="50px" color="primary" />
         </q-inner-loading>
 
-        <!-- Calendar View -->
-        <q-card flat bordered class="q-pa-md q-mb-md">
-            <q-calendar view="month" :events="calendarEvents" animated bordered
-                @click-date="(date) => filters.date = date" />
-        </q-card>
-
         <!-- Upcoming Bookings -->
         <div v-if="upcomingBookings.length">
             <div class="text-h6 text-bold q-mb-md">Upcoming Bookings</div>
             <q-list separator>
                 <q-card v-for="booking in upcomingBookings" :key="booking.id" class="q-mb-md">
                     <q-card-section>
-                        <div class="text-h6 text-primary">{{ formatDate(booking.date) }}</div>
+                        <div class="text-h6 text-secondary">{{ formatDate(booking.date) }}</div>
                         <q-badge color="positive" class="q-mt-sm">Upcoming</q-badge>
                     </q-card-section>
                     <q-card-section>
@@ -44,7 +40,7 @@
                         <p><strong>Court:</strong> {{ booking.court }}</p>
                         <p><strong>Price:</strong> {{ formatPrice(booking.price) }}</p>
                         <p>
-                            <strong>Time Slots:</strong>
+                            <strong>Time Slots: </strong>
                             <span v-if="booking.slots?.length">{{ booking.slots.join(", ") }}</span>
                             <span v-else class="text-grey">No slots selected</span>
                         </p>
@@ -70,7 +66,7 @@
                         <p><strong>Court:</strong> {{ booking.court }}</p>
                         <p><strong>Price:</strong> {{ formatPrice(booking.price) }}</p>
                         <p>
-                            <strong>Time Slots:</strong>
+                            <strong>Time Slots: </strong>
                             <span v-if="booking.slots?.length">{{ booking.slots.join(", ") }}</span>
                             <span v-else class="text-grey">No slots selected</span>
                         </p>
@@ -155,16 +151,6 @@ const formatDate = (dateString) => {
 };
 
 const formatPrice = (price) => (price ? `EGP ${price}` : "N/A");
-
-// Calendar Events
-const calendarEvents = computed(() => {
-    return myBookings.value.map(booking => ({
-        start: booking.date,
-        end: booking.date,
-        title: `${booking.sport} - ${booking.court}`,
-        color: "blue"
-    }));
-});
 
 onMounted(fetchUserBookings);
 </script>

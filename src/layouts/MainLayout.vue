@@ -43,9 +43,9 @@
     <q-footer>
       <div class="footer-nav">
         <q-tabs dense active-color="text-primary" indicator-color="transparent" class="footer-tabs">
-          <q-route-tab to="/" icon="home" label="" active-class="bg-secondary text-primary" />
-          <q-route-tab to="/profile" icon="account_circle" label="" active-class="bg-secondary text-primary" />
-          <q-route-tab to="/wallet" icon="account_balance_wallet" label="" active-class="bg-secondary text-primary" />
+          <q-route-tab to="/" icon="home" label="" />
+          <q-route-tab to="/profile" icon="account_circle" label="" />
+          <q-route-tab to="/wallet" icon="account_balance_wallet" label="" />
           <q-route-tab icon="menu" label="" @click="toggleLeftDrawer" />
         </q-tabs>
       </div>
@@ -89,7 +89,7 @@ function openContactDialog() {
 async function logout() {
   try {
     await signOut(auth);
-    router.push('/auth/login'); // Redirect to login page after logout
+    router.push('/auth/login');
   } catch (error) {
     console.error('Logout failed:', error);
   }

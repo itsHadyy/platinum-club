@@ -28,7 +28,8 @@
             <p>{{ price }} EGP</p>
 
             <div class="row justify-center q-mt-lg">
-                <q-btn color="secondary" class="" label="Confirm Booking" @click="confirmBooking" />
+                <q-btn :loading="loading" :disable="loading" color="secondary" class="" label="Confirm Booking"
+                    @click="confirmBooking" />
             </div>
         </q-card-section>
     </q-page>
@@ -39,11 +40,11 @@ import { useRoute, useRouter } from 'vue-router';
 import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
 import { getAuth } from 'firebase/auth';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const route = useRoute();
 const router = useRouter();
-
+const loading = ref(false);
 const auth = getAuth();
 
 const day = route.query.day;
@@ -65,6 +66,9 @@ const confirmBooking = async () => {
         alert('User not authenticated');
         return;
     }
+
+    if (loading.value) return;
+    loading.value = true;
 
     try {
         // Fetch the user's data from Firestore
@@ -94,6 +98,8 @@ const confirmBooking = async () => {
     } catch (error) {
         console.error('Error adding booking:', error);
         alert('Failed to confirm booking. Please try again.');
+    } finally {
+        loading.value = false;
     }
 };
 </script>
