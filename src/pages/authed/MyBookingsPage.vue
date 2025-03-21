@@ -1,6 +1,5 @@
 <template>
     <q-page class="q-pa-md">
-
         <q-bar class="bg-white text-dark">
             <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)" />
         </q-bar>
@@ -25,40 +24,66 @@
             <q-spinner size="50px" color="primary" />
         </q-inner-loading>
 
-        <!-- Bookings List -->
-        <q-list bordered separator v-if="filteredBookings.length">
-            <q-item v-for="booking in filteredBookings" :key="booking.id">
-                <q-item-section>
-                    <q-item-label>
-                        <strong>Date:</strong> {{ formatDate(booking.date) }}
-                        <q-badge :color="getBookingStatus(booking.date).color" class="q-ml-sm">
-                            {{ getBookingStatus(booking.date).label }}
-                        </q-badge>
-                    </q-item-label>
-                    <q-item-label><strong>Sport:</strong> {{ booking.sport }}</q-item-label>
-                    <q-item-label><strong>Court:</strong> {{ booking.court }}</q-item-label>
-                    <q-item-label><strong>Price:</strong> {{ formatPrice(booking.price) }}</q-item-label>
-                    <q-item-label>
-                        <strong>Time Slots:</strong>
-                        <span v-if="booking.slots?.length">{{ booking.slots.join(", ") }}</span>
-                        <span v-else class="text-grey">No slots selected</span>
-                    </q-item-label>
-                </q-item-section>
+        <!-- Calendar View -->
+        <q-card flat bordered class="q-pa-md q-mb-md">
+            <q-calendar view="month" :events="calendarEvents" animated bordered
+                @click-date="(date) => filters.date = date" />
+        </q-card>
 
-                <q-item-section side>
-                    <q-btn color="negative" dense @click="cancelBooking(booking.id)">
-                        Cancel
-                    </q-btn>
-                </q-item-section>
-            </q-item>
-        </q-list>
+        <!-- Upcoming Bookings -->
+        <div v-if="upcomingBookings.length">
+            <div class="text-h6 text-bold q-mb-md">Upcoming Bookings</div>
+            <q-list separator>
+                <q-card v-for="booking in upcomingBookings" :key="booking.id" class="q-mb-md">
+                    <q-card-section>
+                        <div class="text-h6 text-primary">{{ formatDate(booking.date) }}</div>
+                        <q-badge color="positive" class="q-mt-sm">Upcoming</q-badge>
+                    </q-card-section>
+                    <q-card-section>
+                        <p><strong>Sport:</strong> {{ booking.sport }}</p>
+                        <p><strong>Court:</strong> {{ booking.court }}</p>
+                        <p><strong>Price:</strong> {{ formatPrice(booking.price) }}</p>
+                        <p>
+                            <strong>Time Slots:</strong>
+                            <span v-if="booking.slots?.length">{{ booking.slots.join(", ") }}</span>
+                            <span v-else class="text-grey">No slots selected</span>
+                        </p>
+                    </q-card-section>
+                    <q-card-actions align="right">
+                        <q-btn color="negative" dense @click="cancelBooking(booking.id)">Cancel</q-btn>
+                    </q-card-actions>
+                </q-card>
+            </q-list>
+        </div>
+
+        <!-- Past Bookings -->
+        <div v-if="pastBookings.length">
+            <div class="text-h6 text-bold q-mb-md q-mt-md">Past Bookings</div>
+            <q-list separator>
+                <q-card v-for="booking in pastBookings" :key="booking.id" class="q-mb-md">
+                    <q-card-section>
+                        <div class="text-h6 text-grey">{{ formatDate(booking.date) }}</div>
+                        <q-badge color="negative" class="q-mt-sm">Past</q-badge>
+                    </q-card-section>
+                    <q-card-section>
+                        <p><strong>Sport:</strong> {{ booking.sport }}</p>
+                        <p><strong>Court:</strong> {{ booking.court }}</p>
+                        <p><strong>Price:</strong> {{ formatPrice(booking.price) }}</p>
+                        <p>
+                            <strong>Time Slots:</strong>
+                            <span v-if="booking.slots?.length">{{ booking.slots.join(", ") }}</span>
+                            <span v-else class="text-grey">No slots selected</span>
+                        </p>
+                    </q-card-section>
+                </q-card>
+            </q-list>
+        </div>
 
         <!-- Empty State -->
-        <div v-else class="text-center text-grey q-mt-lg">
+        <div v-if="!upcomingBookings.length && !pastBookings.length" class="text-center text-grey q-mt-lg">
             <q-icon name="event_busy" size="48px" />
             <div class="q-mt-md">No bookings found.</div>
         </div>
-
     </q-page>
 </template>
 
@@ -72,16 +97,15 @@ const myBookings = ref([]);
 const loading = ref(true);
 const userStore = useAuthStore();
 
-// Filters
 const filters = ref({
     date: "",
     sport: null,
     court: null,
 });
-const sportOptions = ref(["Basketball", "Tennis", "Football", "Volleyball"]); // Customize
-const courtOptions = ref(["Court A", "Court B", "Court C"]); // Customize
 
-// Fetch user bookings from Firebase
+const sportOptions = ref(["Basketball", "Tennis", "Football", "Volleyball"]);
+const courtOptions = ref(["Court A", "Court B", "Court C"]);
+
 const fetchUserBookings = async () => {
     loading.value = true;
     try {
@@ -99,21 +123,16 @@ const fetchUserBookings = async () => {
     }
 };
 
-// Filtered bookings based on selected filters
-const filteredBookings = computed(() => {
-    return myBookings.value.filter(booking => {
-        return (
-            (!filters.value.date || booking.date === filters.value.date) &&
-            (!filters.value.sport || booking.sport === filters.value.sport) &&
-            (!filters.value.court || booking.court === filters.value.court)
-        );
-    });
+const upcomingBookings = computed(() => {
+    return myBookings.value.filter(booking => new Date(booking.date) >= new Date());
 });
 
-// Apply filters (just re-triggers computed property)
+const pastBookings = computed(() => {
+    return myBookings.value.filter(booking => new Date(booking.date) < new Date());
+});
+
 const applyFilters = () => { };
 
-// Cancel a booking
 const cancelBooking = async (bookingId) => {
     if (confirm('Are you sure you want to cancel this booking?')) {
         try {
@@ -125,7 +144,6 @@ const cancelBooking = async (bookingId) => {
     }
 };
 
-// Format date
 const formatDate = (dateString) => {
     if (!dateString) return "Unknown";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -136,21 +154,17 @@ const formatDate = (dateString) => {
     });
 };
 
-// Format price
-const formatPrice = (price) => price ? `EGP ${price}` : "N/A";
+const formatPrice = (price) => (price ? `EGP ${price}` : "N/A");
 
-// Get booking status (Upcoming or Past)
-const getBookingStatus = (date) => {
-    const bookingDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (bookingDate >= today) {
-        return { label: "Upcoming", color: "positive" };
-    } else {
-        return { label: "Past", color: "negative" };
-    }
-};
+// Calendar Events
+const calendarEvents = computed(() => {
+    return myBookings.value.map(booking => ({
+        start: booking.date,
+        end: booking.date,
+        title: `${booking.sport} - ${booking.court}`,
+        color: "blue"
+    }));
+});
 
 onMounted(fetchUserBookings);
 </script>

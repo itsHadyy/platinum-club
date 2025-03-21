@@ -5,7 +5,15 @@
                 <div class="text-h5 text-center text-secondary">Admin Panel</div>
             </q-card-section>
 
-            <!-- Role Filter -->
+            <q-card-section>
+                <q-input v-model="searchQuery" label="Search by Name or Email" outlined dense debounce="300" clearable
+                    class="q-mb-md">
+                    <template v-slot:append>
+                        <q-icon name="search" />
+                    </template>
+                </q-input>
+            </q-card-section>
+
             <q-card-section>
                 <q-select v-model="selectedRole" :options="roleOptions" label="Filter by role" outlined dense emit-value
                     map-options />
@@ -61,17 +69,23 @@
         <q-dialog v-model="showUserDialog">
             <q-card class="q-pa-md">
                 <q-card-section class="text-center">
-                    <q-avatar size="120px">
-                        <img :src="selectedUser?.profileImage || defaultProfileImage"
-                            :key="selectedUser?.profileImage" />
+                    <q-avatar size="140px" class="shadow-2 rounded">
+                        <img :src="previewImage || selectedUser?.imageUrl || defaultProfileImage" />
                     </q-avatar>
 
-                    <q-btn v-if="isAdmin" flat dense icon="edit" class="q-mt-sm" color="primary"
-                        @click="triggerFileInput">
-                        <q-tooltip>Change Image</q-tooltip>
-                    </q-btn>
+                    <div class="q-mt-md">
+                        <q-btn v-if="isAdmin" flat dense icon="edit" color="secondary" @click="triggerFileInput">
+                            <q-tooltip>Change Image</q-tooltip>
+                        </q-btn>
+                        <q-btn v-if="previewImage" flat dense icon="save" color="positive" @click="saveImage">
+                            <q-tooltip>Save Image</q-tooltip>
+                        </q-btn>
+                        <q-btn v-if="previewImage" flat dense icon="cancel" color="negative" @click="discardImage">
+                            <q-tooltip>Discard</q-tooltip>
+                        </q-btn>
+                    </div>
 
-                    <input ref="fileInput" type="file" accept="image/*" @change="updateUserImage"
+                    <input ref="fileInput" type="file" accept="image/*" @change="previewUserImage"
                         class="hidden-file-input" />
                 </q-card-section>
 
@@ -87,20 +101,14 @@
 
                     <p>
                         <strong>Image URL:</strong>
-                        <button @click="copyImageUrl" title="Copy URL"
-                            style="border: none; background: none; cursor: pointer;">
-                            📋
-                        </button>
-                        <button onclick="toggleUrlVisibility()" title="View URL"
-                            style="border: none; background: none; cursor: pointer;">
-                            👁️
-                        </button>
-                        <span style="display: flex; align-items: center;">
-                            <span id="imageUrl"
-                                style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                {{ selectedUser?.profileImage }}
-                            </span>
-                        </span>
+                        <q-btn flat dense icon="content_copy" color="primary" @click="copyImageUrl">
+                            <q-tooltip>Copy URL</q-tooltip>
+                        </q-btn>
+                        <!-- <q-btn flat dense icon="visibility" color="secondary" @click="toggleUrlVisibility">
+                            <q-tooltip>View URL</q-tooltip>
+                        </q-btn> -->
+                        <!-- <q-space /> -->
+                        <!-- <span v-if="isUrlVisible" class="text-blue q-ml-md">{{ selectedUser?.imageUrl }}</span> -->
                     </p>
 
                     <p v-if="selectedUser?.createdAt"><strong>Joined:</strong> {{ selectedUser.createdAt }}</p>
@@ -120,7 +128,6 @@ import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from 'firebase
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from 'src/boot/firebase';
 
-// Reactive State
 const users = ref([]);
 const loading = ref(true);
 const error = ref("");
@@ -129,14 +136,22 @@ const showUserDialog = ref(false);
 const selectedUser = ref(null);
 const isAdmin = true;
 const fileInput = ref(null);
+const previewImage = ref(null);
+const originalImage = ref(null);
 
-// Static Data
-const ADMIN_PASSWORD = "Admin1234"; // Change this for security later
+const ADMIN_PASSWORD = "Admin1234";
 const defaultProfileImage = "https://cdn.quasar.dev/img/avatar5.png";
 
-// Open File Input
 const triggerFileInput = () => {
     fileInput.value.click();
+};
+
+const previewUserImage = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        originalImage.value = selectedUser.value.imageUrl;
+        previewImage.value = URL.createObjectURL(file);
+    }
 };
 
 const columns = [
@@ -154,11 +169,28 @@ const roleOptions = [
     { label: "Pending", value: "pending" }
 ];
 
+const searchQuery = ref("");
+
 const filteredUsers = computed(() => {
-    if (selectedRole.value === "all") {
-        return users.value;
+    let result = users.value;
+
+    // Apply role filter
+    if (selectedRole.value !== "all") {
+        result = result.filter(user => user.role === selectedRole.value);
     }
-    return users.value.filter(user => user.role === selectedRole.value);
+
+    // Apply search filter
+    if (searchQuery.value.trim() !== "") {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter(user =>
+            user.firstName.toLowerCase().includes(query) ||
+            user.middleName.toLowerCase().includes(query) ||
+            user.lastName.toLowerCase().includes(query) ||
+            user.email.toLowerCase().includes(query)
+        );
+    }
+
+    return result;
 });
 
 const fetchUsers = async () => {
@@ -217,10 +249,10 @@ const viewUserDetails = (user) => {
     showUserDialog.value = true;
 };
 
-let isUrlVisible = false;
+// const isUrlVisible = true;
 
 const copyImageUrl = () => {
-    const imageUrl = selectedUser.value?.profileImage || '';
+    const imageUrl = selectedUser.value?.imageUrl || '';
 
     if (!imageUrl) {
         alert('No image URL found');
@@ -228,37 +260,42 @@ const copyImageUrl = () => {
     }
 
     navigator.clipboard.writeText(imageUrl)
-        .then(() => alert('Image URL copied to clipboard!'))
-        .catch(err => console.error('Failed to copy: ', err));
+        .then(() => {
+            alert('Image URL copied to clipboard!');
+        })
+        .catch(err => {
+            console.error('Failed to copy:', err);
+        });
 };
 
-window.toggleUrlVisibility = function () {
-    const urlElement = document.getElementById('imageUrl');
-    isUrlVisible = !isUrlVisible;
-    urlElement.style.whiteSpace = isUrlVisible ? 'normal' : 'nowrap';
-    urlElement.style.maxWidth = isUrlVisible ? 'none' : 'auto';
-}
+// const toggleUrlVisibility = () => {
+//     isUrlVisible.value = !isUrlVisible;
+// };
 
-const updateUserImage = async (event) => {
-    const file = event.target.files[0];
+const saveImage = async () => {
+    if (!previewImage.value) return;
+
+    const file = fileInput.value.files[0];
     if (!file) return;
 
     try {
         const fileRef = storageRef(storage, `profile_pictures/${selectedUser.value.id}`);
-
         const snapshot = await uploadBytes(fileRef, file);
-
         const imageUrl = await getDownloadURL(snapshot.ref);
 
-        await updateDoc(doc(db, 'users', selectedUser.value.id), {
-            imageUrl: imageUrl
-        });
+        await updateDoc(doc(db, 'users', selectedUser.value.id), { imageUrl });
 
-        selectedUser.value.profileImage = imageUrl;
+        selectedUser.value.imageUrl = imageUrl;
+        previewImage.value = null;
 
     } catch (error) {
         console.error('Error updating user image:', error);
     }
+};
+
+const discardImage = () => {
+    previewImage.value = null;
+    fileInput.value.value = '';
 };
 
 onMounted(fetchUsers);

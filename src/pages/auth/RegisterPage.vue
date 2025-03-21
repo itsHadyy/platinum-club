@@ -46,14 +46,15 @@
                             <q-icon name="cloud_upload" />
                         </template>
                     </q-file>
-                    
+
                     <div align="center">
                         <q-img v-if="imagePreview" :src="imagePreview" class="q-mt-md"
                             style="height: 100px; width: 100px; border-radius: 50%;" />
                     </div>
 
                     <div align="center">
-                        <q-btn type="submit" label="Register" color="secondary" class="q-ma-auto" />
+                        <q-btn :loading="loading" :disable="loading" type="submit" label="Register" color="secondary"
+                            class="q-ma-auto" />
                     </div>
 
                     <!-- Error Message -->
@@ -123,6 +124,7 @@ const register = async () => {
         return;
     }
 
+    if (loading.value) return;
     loading.value = true;
 
     try {

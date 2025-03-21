@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header elevated class="bg-secondary text-white">
+    <q-header elevated class="bg-secondary text-primary">
       <q-toolbar>
         <q-btn dense flat icon="menu" @click="toggleLeftDrawer" />
         <q-toolbar-title>Admin Panel</q-toolbar-title>
@@ -9,32 +9,35 @@
 
     <q-drawer v-model="leftDrawerOpen" bordered>
       <q-list>
-        <q-item clickable v-ripple to="/admin/dashboard">
+        <q-item clickable v-ripple to="/admin/dashboard"
+          :class="{ 'bg-secondary text-primary': $route.path === '/admin/dashboard' }">
           <q-item-section avatar>
             <q-icon name="dashboard" />
           </q-item-section>
-          <q-item-section>Dashboard</q-item-section>
+          <q-item-section class="text-weight-bold">Dashboard</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/admin/bookings">
+        <q-item clickable v-ripple to="/admin/bookings"
+          :class="{ 'bg-secondary text-primary': $route.path === '/admin/bookings' }">
           <q-item-section avatar>
             <q-icon name="event" />
           </q-item-section>
-          <q-item-section>Bookings</q-item-section>
+          <q-item-section class="text-weight-bold">Bookings</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/admin/courts">
+        <q-item clickable v-ripple to="/admin/courts"
+          :class="{ 'bg-secondary text-primary': $route.path === '/admin/courts' }">
           <q-item-section avatar>
             <q-icon name="sports_tennis" />
           </q-item-section>
-          <q-item-section>Manage Courts</q-item-section>
+          <q-item-section class="text-weight-bold">Manage Courts</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/admin/users">
+        <q-item clickable v-ripple to="/admin/users" :class="{ 'bg-secondary text-primary': $route.path === '/admin/users' }">
           <q-item-section avatar>
             <q-icon name="people" />
           </q-item-section>
-          <q-item-section>Users</q-item-section>
+          <q-item-section class="text-weight-bold">Users</q-item-section>
         </q-item>
 
         <!-- Logout Button -->

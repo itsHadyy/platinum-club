@@ -30,10 +30,8 @@ const authStore = useAuthStore();
 const userProfileImage = ref(null);
 const userName = ref(null);
 
-// Default profile image
-const defaultProfileImage = 'https://cdn.quasar.dev/img/avatar.png';
+const defaultProfileImage = 'https://cdn.quasar.dev/img/boy-avatar.png';
 
-// Fetch user data when the component is mounted
 onMounted(async () => {
   if (auth.currentUser) {
     const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));

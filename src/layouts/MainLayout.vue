@@ -17,7 +17,12 @@
       <q-list>
         <q-item-label header>Menu</q-item-label>
 
-        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
+        <EssentialLink 
+          v-for="link in linksList" 
+          :key="link.title" 
+          v-bind="link"
+          :class="{'bg-secondary text-primary': $route.path === link.link}"
+        />
 
         <!-- Logout Button -->
         <q-item clickable @click="logout">
@@ -37,10 +42,10 @@
 
     <q-footer>
       <div class="footer-nav">
-        <q-tabs dense active-color="white" indicator-color="transparent" class="footer-tabs">
-          <q-route-tab to="/" icon="home" label="" />
-          <q-route-tab to="/profile" icon="account_circle" label="" />
-          <q-route-tab to="/wallet" icon="account_balance_wallet" label="" />
+        <q-tabs dense active-color="text-primary" indicator-color="transparent" class="footer-tabs">
+          <q-route-tab to="/" icon="home" label="" active-class="bg-secondary text-primary" />
+          <q-route-tab to="/profile" icon="account_circle" label="" active-class="bg-secondary text-primary" />
+          <q-route-tab to="/wallet" icon="account_balance_wallet" label="" active-class="bg-secondary text-primary" />
           <q-route-tab icon="menu" label="" @click="toggleLeftDrawer" />
         </q-tabs>
       </div>
