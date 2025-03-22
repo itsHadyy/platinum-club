@@ -1,52 +1,58 @@
 <template>
     <q-page class="q-pa-md">
-        <q-bar class="bg-white text-dark">
+
+        <q-card-section class="header flex">
             <q-btn flat round dense icon="arrow_back" @click="$router.go(-1)" />
-            <q-space />
-        </q-bar>
-
-        <div class="text-subtitle1 text-bold q-mb-lg">{{ courtType }} - Choose Date & Time</div>
-
-        <q-card-section>
-            <div class="text-subtitle1 q-mb-md">Available Days:</div>
-            <div v-if="availableDays.length > 0">
-                <q-chip v-for="day in availableDays" :key="day" clickable @click="selectDay(day)"
-                    :class="{ 'bg-secondary text-white': selectedDay === day, 'bg-primary text-secondary': selectedDay !== day }">
-                    {{ formatDate(day) }}
-                </q-chip>
-            </div>
-            <div v-else class="text-grey">No available days</div>
+            <q-toolbar-title> {{ courtType }} - Choose Date & Time </q-toolbar-title>
         </q-card-section>
 
-        <q-card-section>
-            <div class="text-subtitle1 q-mb-md">Select a Court:</div>
-            <div v-if="availableCourts.length > 0">
-                <q-chip v-for="court in availableCourts" :key="court.id" clickable @click="selectCourt(court)"
-                    :class="{ 'bg-secondary text-white': selectedCourt?.id === court.id, 'bg-primary text-secondary': selectedCourt?.id !== court.id }">
-                    {{ court.name }} - {{ court.price }} EGP/hour
-                </q-chip>
-            </div>
-            <div v-else class="text-grey">No courts available</div>
-        </q-card-section>
+        <q-card class="q-pb-lg">
 
-        <q-card-section v-if="selectedDay && selectedCourt">
-            <div class="text-subtitle1 q-mb-md">Select Time Slots:</div>
-            <div v-if="availableTimeSlots.length > 0">
-                <q-chip v-for="slot in availableTimeSlots" :key="slot.time" clickable
-                    @click="toggleSlotSelection(slot.time)" :class="{
-                        'bg-secondary text-white': selectedSlots.includes(slot.time),
-                        'bg-red text-white': slot.isReserved
-                    }" :disable="slot.isReserved">
-                    {{ slot.time }}
-                </q-chip>
-            </div>
-            <div v-else class="text-grey">No available time slots</div>
-        </q-card-section>
+            <q-card-section>
+                <div class="text-subtitle1 q-mb-sm">Available Days:</div>
+                <div v-if="availableDays.length > 0">
+                    <q-chip v-for="day in availableDays" :key="day" clickable @click="selectDay(day)"
+                        :class="{ 'bg-secondary text-white': selectedDay === day, 'bg-primary text-secondary': selectedDay !== day }">
+                        {{ formatDate(day) }}
+                    </q-chip>
+                </div>
+                <div v-else class="text-grey">No available days</div>
+            </q-card-section>
 
-        <div class="row justify-center q-mt-lg" v-if="selectedSlots.length > 0">
-            <q-btn class="q-mt-md" color="secondary" :label="`Confirm Booking (${totalPrice} EGP)`"
-                @click="confirmBooking" />
-        </div>
+            <q-separator />
+
+            <q-card-section>
+                <div class="text-subtitle1 q-mb-sm">Select a Court:</div>
+                <div v-if="availableCourts.length > 0">
+                    <q-chip v-for="court in availableCourts" :key="court.id" clickable @click="selectCourt(court)"
+                        :class="{ 'bg-secondary text-white': selectedCourt?.id === court.id, 'bg-primary text-secondary': selectedCourt?.id !== court.id }">
+                        {{ court.name }} - {{ court.price }} EGP/hour
+                    </q-chip>
+                </div>
+                <div v-else class="text-grey">No courts available</div>
+            </q-card-section>
+
+            <q-separator />
+
+            <q-card-section v-if="selectedDay && selectedCourt">
+                <div class="text-subtitle1 q-mb-sm">Select Time Slots:</div>
+                <div v-if="availableTimeSlots.length > 0">
+                    <q-chip v-for="slot in availableTimeSlots" :key="slot.time" clickable
+                        @click="toggleSlotSelection(slot.time)" :class="{
+                            'bg-secondary text-white': selectedSlots.includes(slot.time),
+                            'bg-red text-white': slot.isReserved
+                        }" :disable="slot.isReserved">
+                        {{ slot.time }}
+                    </q-chip>
+                </div>
+                <div v-else class="text-grey">No available time slots</div>
+            </q-card-section>
+
+            <div class="row justify-center " v-if="selectedSlots.length > 0">
+                <q-btn class="q-mt-md" color="secondary" :label="`Confirm Booking (${totalPrice} EGP)`"
+                    @click="confirmBooking" />
+            </div>
+        </q-card>
     </q-page>
 </template>
 

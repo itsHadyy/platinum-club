@@ -7,7 +7,8 @@
           Platinum Club
         </div>
         <q-space />
-        <q-btn flat dense round icon="notifications" aria-label="Notifications" @click="toggleLeftDrawer" />
+        <!-- <q-btn flat dense round icon="notifications" aria-label="Notifications" @click="toggleLeftDrawer" /> -->
+        <NotificationsMenu />
         <q-btn flat dense round icon="chat" aria-label="Chat" @click="openContactDialog" />
         <ContactDialog v-model="contactDialogVisible" />
       </q-toolbar>
@@ -59,6 +60,7 @@ import { useRouter } from 'vue-router'
 import { getAuth, signOut } from 'firebase/auth'
 import EssentialLink from 'components/EssentialLink.vue'
 import ContactDialog from 'components/dialogs/ContactDialog.vue'
+import NotificationsMenu from "src/components/NotificationsMenu.vue";
 
 const router = useRouter();
 const auth = getAuth();

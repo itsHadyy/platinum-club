@@ -35,6 +35,14 @@ export default [
       {
         path: '/my-bookings',
         component: () => import('src/pages/authed/MyBookingsPage.vue')
+      },
+      {
+        path: "/academies/:sport",
+        component: () => import("src/pages/authed/AcademyList.vue")
+      },
+      {
+        path: "/academy/:id",
+        component: () => import("src/pages/authed/AcademyDetails.vue")
       }
     ]
   },

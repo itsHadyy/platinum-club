@@ -11,6 +11,8 @@
       
       <CarouselComponent />
 
+      <ServicesScroller />
+
       <UpcomingBookingsCard />
     </template>
   </div>
@@ -24,6 +26,7 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 import CarouselComponent from 'src/components/CarouselComponent.vue';
 import UpcomingBookingsCard from 'src/components/UpcomingBookingsCard.vue';
+import ServicesScroller from 'src/components/ServicesScroller.vue';
 
 // Firebase instances
 const auth = getAuth();
