@@ -1,80 +1,108 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref, onMounted } from "vue";
+import { db } from "boot/firebase";
+import {
+    collection,
+    getDocs,
+    doc,
+    setDoc,
+} from "firebase/firestore";
 
 export const useAcademyStore = defineStore("academyStore", () => {
-    const academies = ref([
-        {
-            id: 1,
-            name: "Elite Sports Academy",
-            location: "Downtown",
-            contact: "0123456789",
-            email: "info@elitesports.com",
-            website: "https://elitesports.com",
-            sportsOffered: ["Tennis", "Basketball", "Football"],
-            programs: [
-                { 
-                    id: 1, 
-                    name: "Beginner Tennis", 
-                    price: 500, 
-                    duration: "1 month", 
-                    schedule: "Mon & Wed 5-7 PM", 
-                    ageGroup: "8-12", 
-                    coachId: 1
-                },
-                { 
-                    id: 2, 
-                    name: "Advanced Basketball", 
-                    price: 700, 
-                    duration: "2 months", 
-                    schedule: "Tue & Thu 6-8 PM", 
-                    ageGroup: "12-16", 
-                    coachId: 2 
-                }
-            ],
-            coaches: [
-                { id: 1, name: "Coach A", sport: "Tennis", experience: "10 years" },
-                { id: 2, name: "Coach B", sport: "Basketball", experience: "7 years" }
-            ]
-        },
-        {
-            id: 2,
-            name: "Elite Sports Academy",
-            location: "Downtown",
-            contact: "0123456789",
-            email: "info@elitesports.com",
-            website: "https://elitesports.com",
-            sportsOffered: ["Tennis", "Basketball", "Football"],
-            programs: [
-                { 
-                    id: 1, 
-                    name: "Beginner Tennis", 
-                    price: 500, 
-                    duration: "1 month", 
-                    schedule: "Mon & Wed 5-7 PM", 
-                    ageGroup: "8-12", 
-                    coachId: 1
-                },
-                { 
-                    id: 2, 
-                    name: "Advanced Basketball", 
-                    price: 700, 
-                    duration: "2 months", 
-                    schedule: "Tue & Thu 6-8 PM", 
-                    ageGroup: "12-16", 
-                    coachId: 2 
-                }
-            ],
-            coaches: [
-                { id: 1, name: "Coach A", sport: "Tennis", experience: "10 years" },
-                { id: 2, name: "Coach B", sport: "Basketball", experience: "7 years" }
-            ]
-        },
-    ]);
+    const academies = ref([]);
+    const programs = ref([]);
 
-    // Getter: Filter academies by sport
-    const getAcademiesBySport = computed(() => (sport) => {
-        return academies.value.filter(a => a.sportsOffered.includes(sport));
+    // 🔹 Fetch Academies from Firestore
+    const fetchAcademies = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "academies"));
+            const academyData = [];
+
+            querySnapshot.forEach((docSnap) => {
+                const academy = { id: docSnap.id, ...docSnap.data() };
+                academyData.push(academy);
+            });
+
+            academies.value = academyData;
+        } catch (error) {
+            console.error("Error fetching academies:", error);
+        }
+    };
+
+    // 🔹 Add Academy
+    const addAcademy = async (academy) => {
+        if (!academy.name || !academy.email || !academy.website) {
+            console.error("Academy details are incomplete:", academy);
+            return;
+        }
+
+        try {
+            const academyRef = doc(db, "academies", academy.name);
+            await setDoc(academyRef, {
+                email: academy.email,
+                website: academy.website,
+            }, { merge: true });
+
+            academies.value.push(academy);
+            console.log(`Added Academy: ${academy.name}`);
+        } catch (error) {
+            console.error("Error adding academy:", error);
+        }
+    };
+
+    // 🔹 Fetch Programs from Firestore
+    const fetchPrograms = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "programs"));
+            const programData = [];
+
+            querySnapshot.forEach((docSnap) => {
+                const program = { id: docSnap.id, ...docSnap.data() };
+                programData.push(program);
+            });
+
+            programs.value = programData;
+        } catch (error) {
+            console.error("Error fetching programs:", error);
+        }
+    };
+
+    // 🔹 Add Program
+    const addProgram = async (academyId, program) => {
+        if (!academyId || !program.name || !program.days) {
+            console.error("Program details are incomplete:", program);
+            return;
+        }
+
+        try {
+            const programRef = doc(db, "programs", program.name);
+            await setDoc(programRef, {
+                academyId,
+                startDate: program.startDate,
+                days: program.days,
+                schedule: program.schedule,
+                coaches: program.coaches,
+                support: program.support,
+            }, { merge: true });
+
+            programs.value.push(program);
+            console.log(`Added Program: ${program.name}`);
+        } catch (error) {
+            console.error("Error adding program:", error);
+        }
+    };
+
+    onMounted(() => {
+        fetchAcademies();
+        fetchPrograms();
     });
 
-    return { academies, getAcademiesBySport };
+    return {
+        academies,
+        programs,
+        fetchAcademies,
+        fetchPrograms,
+        addAcademy,
+        addProgram,
+    };
 });

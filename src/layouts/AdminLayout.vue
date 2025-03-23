@@ -32,6 +32,14 @@
           </q-item-section>
           <q-item-section class="text-weight-bold">Manage Courts</q-item-section>
         </q-item>
+        
+        <q-item clickable v-ripple to="/admin/academies"
+          :class="{ 'bg-secondary text-primary': $route.path === '/admin/academies' }">
+          <q-item-section avatar>
+            <q-icon name="sports" />
+          </q-item-section>
+          <q-item-section class="text-weight-bold">Manage Academies</q-item-section>
+        </q-item>
 
         <q-item clickable v-ripple to="/admin/users" :class="{ 'bg-secondary text-primary': $route.path === '/admin/users' }">
           <q-item-section avatar>

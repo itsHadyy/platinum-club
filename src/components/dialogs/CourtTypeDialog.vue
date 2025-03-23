@@ -1,13 +1,9 @@
 <template>
     <q-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
         <q-card class="q-pa-md">
-            <q-bar class="bg-white text-dark">
-                <q-btn flat round dense icon="arrow_back" @click="$emit('update:modelValue', false)" />
-                <q-space />
-            </q-bar>
 
-            <q-card-section class="text-h6 q-mt-md q-ml-md">
-                Choose a Sport
+            <q-card-section class="header flex">
+                <q-toolbar-title class=""> Choose a Sport </q-toolbar-title>
             </q-card-section>
 
             <q-card-section>
@@ -21,13 +17,12 @@
 </template>
 
 <script setup>
-defineProps({
-    modelValue: Boolean
-});
-
+import { computed } from "vue";
 import { useSportsStore } from "stores/sportsStore";
 
-const sportsStore = useSportsStore();
-const courtTypes = sportsStore.sportsOptions;
+defineProps({ modelValue: Boolean });
 
+const sportsStore = useSportsStore();
+
+const courtTypes = computed(() => sportsStore.sportsOptions);
 </script>

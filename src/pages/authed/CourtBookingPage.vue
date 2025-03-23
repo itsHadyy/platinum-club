@@ -169,15 +169,15 @@ const toggleSlotSelection = (slot) => {
         : [...selectedSlots.value, slot];
 };
 
-// ✅ Compute total price
 const totalPrice = computed(() => selectedSlots.value.length * courtPrice.value);
 
-// ✅ Confirm booking and navigate to summary
 const confirmBooking = () => {
     if (!selectedDay.value || !selectedCourt.value || selectedSlots.value.length === 0) {
         alert('Please select all fields');
         return;
     }
+
+    const localDate = new Date(selectedDay.value.getTime() - selectedDay.value.getTimezoneOffset() * 60000);
 
     router.push({
         name: "BookingSummaryPage",
@@ -185,7 +185,7 @@ const confirmBooking = () => {
             court: selectedCourt.value.name,
             courtId: selectedCourt.value.id,
             sport: courtType.value,
-            day: selectedDay.value.toISOString(),
+            day: localDate.toISOString(), 
             slots: JSON.stringify(selectedSlots.value),
             price: totalPrice.value,
         },
