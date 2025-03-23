@@ -1,26 +1,22 @@
 <template>
     <q-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
         <q-card class="q-pa-md">
-            <!-- Top Bar -->
-            <q-bar class="bg-white text-dark">
-                <q-btn flat round dense icon="close" @click="$emit('update:modelValue', false)" />
-                <q-space />
-            </q-bar>
-
-            <!-- Title -->
-            <q-card-section class="text-h6 q-mt-md q-ml-md">
-                Select a Sport
+            <q-card-section class="flex text-center">
+                <q-toolbar-title class=""> Choose a Sport </q-toolbar-title>
             </q-card-section>
 
-            <!-- List of Available Sports -->
             <q-card-section>
+                <q-inner-loading :showing="academyStore.academyOptions.length === 0">
+                    <q-spinner size="50px" color="primary" />
+                </q-inner-loading>
+
                 <q-btn v-for="sport in availableSports" :key="sport" class="full-width q-mb-md" color="secondary"
                     @click="goToAcademies(sport)">
                     {{ sport }}
                 </q-btn>
 
-                <!-- Show Message if No Sports Are Available -->
-                <div v-if="availableSports.length === 0" class="text-center text-grey q-mt-md">
+                <div v-if="availableSports.length === 0 && academyStore.academyOptions.length > 0"
+                    class="text-center text-grey q-mt-md">
                     No sports available at the moment.
                 </div>
             </q-card-section>
@@ -31,7 +27,7 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { computed } from "vue";
-import { useAcademyStore } from "stores/academyStore";
+import { useAcademiesStore } from "stores/academyStore";
 
 defineProps({
     modelValue: Boolean
@@ -39,21 +35,26 @@ defineProps({
 
 const emit = defineEmits(["update:modelValue"]);
 const router = useRouter();
-const academyStore = useAcademyStore();
+const academyStore = useAcademiesStore();
 
-// Dynamically filter sports based on academy availability
 const availableSports = computed(() => {
-    // Get all unique sports from the academies
     const sportsSet = new Set();
-    academyStore.academies.forEach(academy => {
-        academy.sportsOffered.forEach(sport => sportsSet.add(sport));
+
+    academyStore.academyOptions.forEach(academy => {
+        if (academy.programs && Array.isArray(academy.programs)) {
+            academy.programs.forEach(program => {
+                if (program.sport) {
+                    sportsSet.add(program.sport); 
+                }
+            });
+        }
     });
-    return Array.from(sportsSet);
+
+    return Array.from(sportsSet); 
 });
 
-// Navigate to academies page for selected sport
 const goToAcademies = (sport) => {
-    emit("update:modelValue", false); // Close the dialog
+    emit("update:modelValue", false);
     router.push(`/academies/${sport}`);
 };
 </script>

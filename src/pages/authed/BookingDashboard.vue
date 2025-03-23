@@ -33,7 +33,7 @@
 <script setup>
 import { ref } from 'vue';
 import CourtTypeDialog from 'src/components/dialogs/CourtTypeDialog.vue';
-// import AcademyTypeDialog from 'src/components/dialogs/AcademyTypeDialog.vue';
+import AcademyTypeDialog from 'src/components/dialogs/AcademyTypeDialog.vue';
 import { useRouter } from 'vue-router';
 
 const showCourtDialog = ref(false);

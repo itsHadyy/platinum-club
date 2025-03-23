@@ -1,11 +1,12 @@
 import { defineStore } from "pinia";
 import { ref, onMounted } from "vue";
 import { db } from "boot/firebase";
-import { collection, getDocs, updateDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 
 export const useAcademiesStore = defineStore("academiesStore", () => {
     const academyOptions = ref([]);
     const programsByAcademy = ref({});
+    const selectedAcademy = ref(null);
 
     const fetchAcademies = async () => {
         try {
@@ -100,7 +101,28 @@ export const useAcademiesStore = defineStore("academiesStore", () => {
         await updateDoc(doc(db, "academies", academyId), { programs: updatedPrograms });
     };
 
+    const getAcademiesBySport = (sport) => {
+        return academyOptions.value.filter(academy => {
+            return academy.programs?.some(program => program.sport === sport);
+        });
+    };
+
+    const fetchAcademyById = async (academyId) => {
+        try {
+            const docRef = doc(db, "academies", academyId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                selectedAcademy.value = { id: docSnap.id, ...docSnap.data() };
+            } else {
+                console.error("Academy not found");
+            }
+        } catch (error) {
+            console.error("Error fetching academy:", error);
+        }
+    };
+
     onMounted(fetchAcademies);
 
-    return { academyOptions, programsByAcademy, fetchAcademies, addAcademy, updateAcademy, deleteAcademy, addProgram, updateProgram, deleteProgram };
+    return { academyOptions, programsByAcademy, fetchAcademies, fetchAcademyById, addAcademy, updateAcademy, deleteAcademy, addProgram, updateProgram, deleteProgram, getAcademiesBySport };
 });

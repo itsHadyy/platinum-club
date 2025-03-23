@@ -2,7 +2,7 @@
     <q-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
         <q-card class="q-pa-md">
 
-            <q-card-section class="header flex">
+            <q-card-section class="flex text-center">
                 <q-toolbar-title class=""> Choose a Sport </q-toolbar-title>
             </q-card-section>
 
