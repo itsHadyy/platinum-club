@@ -200,3 +200,9 @@ onMounted(() => {
     generateDays();
 });
 </script>
+
+<style>
+.q-card{
+    cursor:auto;
+}
+</style>

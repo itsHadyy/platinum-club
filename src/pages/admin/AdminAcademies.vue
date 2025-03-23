@@ -1,155 +1,134 @@
 <template>
     <q-page class="q-pa-md">
-        <q-card>
-            <q-card-section class="row items-center justify-between">
-                <div class="text-h5">Academy Management</div>
-                <q-btn color="primary" label="Add Academy" icon="add" @click="openAcademyDialog()" />
-            </q-card-section>
+        <div class="row items-center q-mb-md">
+            <div class="col">
+                <h4>Manage Academies & Programs</h4>
+            </div>
+            <div class="col-auto">
+                <q-btn label="Add Academy" color="secondary" @click="openAcademyDialog()" />
+            </div>
+        </div>
 
-            <q-separator />
+        <!-- Display Academies -->
+        <div class="row q-col-gutter-md">
+            <div v-for="academy in academyOptions" :key="academy.id" class="col-12 col-md-4">
+                <q-card flat bordered class="q-pa-md cursor-pointer" @click="openAcademyDetails(academy)">
+                    <q-card-section>
+                        <h5>{{ academy.id }}</h5>
+                        <p class="text-caption">📧 {{ academy.email }}</p>
+                        <p class="text-caption">🌐 <a :href="academy.website" target="_blank">{{ academy.website }}</a>
+                        </p>
+                    </q-card-section>
+                </q-card>
+            </div>
+        </div>
 
-            <q-card-section>
-                <q-list bordered separator>
-                    <q-item v-for="academy in academies" :key="academy.id" clickable v-ripple>
-                        <q-item-section>
-                            <q-item-label class="text-h6">{{ academy.name }}</q-item-label>
-                            <q-item-label caption>{{ academy.email }} | {{ academy.website }}</q-item-label>
-
-                            <q-btn color="primary" label="Add Program" icon="add" flat
-                                @click="openProgramDialog(academy.id)" />
-                            <q-list bordered separator>
-                                <q-item v-for="program in getPrograms(academy.id)" :key="program.id">
-                                    <q-item-section>
-                                        <q-item-label class="text-bold">{{ program.name }}</q-item-label>
-                                        <q-item-label caption>Coaches: {{ program.coaches?.join(", ") || "N/A"
-                                        }}</q-item-label>
-                                        <q-item-label caption>Support Staff: {{ program.supportStaff?.join(", ") ||
-                                            "N/A" }}</q-item-label>
-
-                                        <q-item-label caption>
-                                            <ul>
-                                                <li v-for="(time, index) in program.schedule" :key="index">
-                                                    {{ time.day }}: {{ time.startTime }} - {{ time.endTime }}
-                                                </li>
-                                            </ul>
-                                        </q-item-label>
-                                    </q-item-section>
-                                    <q-item-section side>
-                                        <q-btn flat icon="edit" @click="openProgramDialog(academy.id, program)" />
-                                        <q-btn flat icon="delete" color="red" @click="deleteProgram(program.id)" />
-                                    </q-item-section>
-                                </q-item>
-                            </q-list>
-                        </q-item-section>
-                        <q-item-section side>
-                            <q-btn flat icon="edit" @click="openAcademyDialog(academy)" />
-                            <q-btn flat icon="delete" color="red" @click="deleteAcademy(academy.id)" />
-                        </q-item-section>
-                    </q-item>
-                </q-list>
-            </q-card-section>
-        </q-card>
-
-        <!-- Add/Edit Academy Dialog -->
-        <q-dialog v-model="isAcademyDialogOpen">
-            <q-card style="width: 400px">
+        <!-- Academy Details Dialog -->
+        <q-dialog v-model="academyDialog">
+            <q-card class="q-pa-md" style="min-width: 500px;">
                 <q-card-section>
-                    <div class="text-h6">{{ isEditingAcademy ? "Edit Academy" : "Add Academy" }}</div>
+                    <h5>{{ selectedAcademy?.id }}</h5>
+                    <p><strong>Email:</strong> {{ selectedAcademy?.email }}</p>
+                    <p><strong>Website:</strong> <a :href="selectedAcademy?.website" target="_blank">
+                            {{ selectedAcademy?.website }}</a></p>
                 </q-card-section>
 
+                <q-separator />
+
                 <q-card-section>
-                    <q-input v-model="form.name" label="Academy Name" filled />
-                    <q-input v-model="form.email" label="Email" type="email" filled />
-                    <q-input v-model="form.website" label="Website" filled />
+                    <h6>🎯 Programs</h6>
+                    <q-list v-if="programs.length" separator bordered>
+                        <q-item v-for="program in programs" :key="program.id">
+                            <q-item-section>
+                                <q-item-label><strong>{{ program.name }}</strong></q-item-label>
+                                <q-item-label caption>Coaches: {{ program.coaches.join(", ") }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                    <div v-else class="text-center q-pa-md">
+                        No programs available.
+                    </div>
+
+                    <!-- Add Program Button -->
+                    <q-btn label="Add Program" color="primary" @click="openAddProgramDialog" class="q-mt-md" />
                 </q-card-section>
 
                 <q-card-actions align="right">
-                    <q-btn flat label="Cancel" @click="isAcademyDialogOpen = false" />
-                    <q-btn color="primary" :label="isEditingAcademy ? 'Update' : 'Add'" @click="saveAcademy" />
+                    <q-btn label="Close" color="negative" v-close-popup />
                 </q-card-actions>
             </q-card>
         </q-dialog>
 
-        <!-- Add/Edit Program Dialog -->
-        <q-dialog v-model="isProgramDialogOpen">
-            <q-card style="width: 500px">
+        <q-dialog v-model="addProgramDialog">
+            <q-card class="q-pa-md" style="min-width: 400px;">
                 <q-card-section>
-                    <div class="text-h6">{{ isEditingProgram ? "Edit Program" : "Add Program" }}</div>
+                    <h5>Add New Program</h5>
+                    <q-input v-model="newProgram.name" label="Program Name" dense outlined class="q-mb-md" />
+                    <q-input v-model="newProgram.coaches" label="Coaches (comma-separated)" dense outlined
+                        class="q-mb-md" />
                 </q-card-section>
-
-                <q-card-section>
-                    <q-input v-model="programForm.name" label="Program Name" filled />
-                    <q-input v-model="programForm.startDate" label="Start Date" type="date" filled />
-
-                    <q-select v-model="programForm.days" multiple :options="daysOptions" label="Days" filled
-                        @update:model-value="updateSchedule" />
-
-                    <q-list bordered>
-                        <q-item v-for="(schedule, index) in programForm.schedule" :key="index">
-                            <q-item-section>
-                                <q-item-label class="text-bold">{{ schedule.day }}</q-item-label>
-                                <q-input v-model="schedule.startTime" label="Start Time" type="time" filled />
-                                <q-input v-model="schedule.endTime" label="End Time" type="time" filled />
-                            </q-item-section>
-                        </q-item>
-                    </q-list>
-
-                    <q-input v-model="coachesInput" label="Coaches (comma-separated)" filled
-                        @update:model-value="updateCoaches" />
-                    <q-input v-model="supportInput" label="Support Staff (comma-separated)" filled
-                        @update:model-value="updateSupport" />
-                </q-card-section>
-
                 <q-card-actions align="right">
-                    <q-btn flat label="Cancel" @click="isProgramDialogOpen = false" />
-                    <q-btn color="primary" :label="isEditingProgram ? 'Update' : 'Add'" @click="saveProgram" />
+                    <q-btn label="Add Program" color="primary" @click="handleProgramSave" />
+                    <q-btn label="Cancel" color="negative" v-close-popup />
+                </q-card-actions>
+            </q-card>
+        </q-dialog>
+
+        <!-- Add Academy Dialog -->
+        <q-dialog v-model="addAcademyDialog">
+            <q-card class="q-pa-md" style="min-width: 400px;">
+                <q-card-section>
+                    <h5>Add New Academy</h5>
+                    <q-input v-model="newAcademy.name" label="Academy Name" dense outlined class="q-mb-md" />
+                    <q-input v-model="newAcademy.email" label="Academy Email" dense outlined class="q-mb-md" />
+                    <q-input v-model="newAcademy.website" label="Academy Website" dense outlined class="q-mb-md" />
+                </q-card-section>
+                <q-card-actions align="right">
+                    <q-btn label="Add Academy" color="primary" @click="handleAcademySave" />
+                    <q-btn label="Cancel" color="negative" v-close-popup />
                 </q-card-actions>
             </q-card>
         </q-dialog>
     </q-page>
 </template>
-<script setup>
-import { ref, computed } from "vue";
-import { useAcademyStore } from "src/stores/academyStore";
 
-const academyStore = useAcademyStore();
-const isAcademyDialogOpen = ref(false);
-const isProgramDialogOpen = ref(false);
-const selectedAcademyId = ref(null);
+<script>
+import { ref, computed, onMounted } from "vue";
+import { useAcademiesStore } from "src/stores/academyStore";
 
-const form = ref({ name: "", email: "", website: "" });
-const programForm = ref({ name: "", startDate: "", days: [], schedule: [], coaches: "", support: "" });
+export default {
+    setup() {
+        const store = useAcademiesStore();
+        const academyDialog = ref(false);
+        const addAcademyDialog = ref(false);
+        const selectedAcademy = ref(null);
+        const programs = ref([]);
+        const newAcademy = ref({ name: "", email: "", website: "" });
 
-const daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        // Load academies on page mount
+        onMounted(() => {
+            store.fetchAcademies();
+        });
 
-const academies = computed(() => academyStore.academies);
-const getPrograms = (academyId) => academyStore.programs.filter((p) => p.academyId === academyId);
+        const academyOptions = computed(() => store.academyOptions || []);
 
-const openAcademyDialog = (academy = null) => {
-    form.value = academy ? { ...academy } : { name: "", email: "", website: "" };
-    isAcademyDialogOpen.value = true;
+        const openAcademyDetails = (academy) => {
+            selectedAcademy.value = academy;
+            programs.value = store.programsByAcademy[academy.id] || [];
+            academyDialog.value = true;
+        };
+
+        const openAcademyDialog = () => {
+            newAcademy.value = { name: "", email: "", website: "" };
+            addAcademyDialog.value = true;
+        };
+
+        const handleAcademySave = () => {
+            store.addAcademy(newAcademy.value);
+            addAcademyDialog.value = false;
+        };
+
+        return { academyDialog, addAcademyDialog, selectedAcademy, programs, academyOptions, openAcademyDetails, openAcademyDialog, handleAcademySave };
+    },
 };
-
-const saveAcademy = async () => {
-    if (!form.value.name || !form.value.email || !form.value.website) {
-        console.error("Missing academy details");
-        return;
-    }
-    await academyStore.addAcademy(form.value);
-    isAcademyDialogOpen.value = false;
-};
-
-const openProgramDialog = (academyId) => {
-    selectedAcademyId.value = academyId;
-    programForm.value = { name: "", startDate: "", days: [], schedule: [], coaches: "", support: "" };
-    isProgramDialogOpen.value = true;
-};
-
-const saveProgram = async () => {
-    programForm.value.coaches = programForm.value.coaches.split(",");
-    programForm.value.support = programForm.value.support.split(",");
-
-    await academyStore.addProgram(selectedAcademyId.value, programForm.value);
-    isProgramDialogOpen.value = false;
-};
-</script>◊
+</script>
