@@ -43,6 +43,25 @@ export default [
       {
         path: "/academy/:id",
         component: () => import("src/pages/authed/AcademyDetails.vue")
+      },
+      {
+        path: '/booking/academy/:academyId/program',
+        name: 'ProgramBooking',
+        component: () => import('src/pages/authed/ProgramBookingPage.vue'),
+        props: (route) => ({
+          program: {
+            name: route.query.programName || '',
+            sport: route.query.sport || '',
+            coaches: route.query.coaches?.split(',') || [],
+            schedule: JSON.parse(route.query.schedule || '[]'),
+            startDate: route.query.startDate || '',
+            durationWeeks: parseInt(route.query.durationWeeks) || 0,
+            price: parseFloat(route.query.price) || 0,
+            ageGroup: route.query.ageGroup || '',
+            description: route.query.description || '',
+            levels: JSON.parse(route.query.levels || '[]')
+          }
+        })
       }
     ]
   },

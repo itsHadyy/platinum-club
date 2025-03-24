@@ -14,10 +14,11 @@
                 <q-card flat bordered class="q-pa-md cursor-pointer">
                     <q-card-section>
                         <h5>{{ academy.id }}</h5>
-                        <p class="text-caption"> <strong>Email: </strong>{{ academy.email }}</p>
-                        <p class="text-caption"> <strong>Phone:</strong> {{ academy.phone }}</p>
-                        <p class="text-caption"> <strong>Website:</strong> <a :href="academy.website" target="_blank">{{
-                                academy.website }}</a>
+                        <p class="text-caption"><strong>Email:</strong> {{ academy.email }}</p>
+                        <p class="text-caption"><strong>Phone:</strong> {{ academy.phone }}</p>
+                        <p class="text-caption">
+                            <strong>Website:</strong>
+                            <a :href="academy.website" target="_blank">{{ academy.website }}</a>
                         </p>
                     </q-card-section>
                     <q-card-actions align="right">
@@ -29,14 +30,17 @@
             </div>
         </div>
 
+        <!-- Academy Details Dialog -->
         <q-dialog v-model="academyDialog">
             <q-card class="q-pa-md" style="min-width: 500px;">
                 <q-card-section>
                     <h5>{{ selectedAcademy?.id }}</h5>
                     <p><strong>Email:</strong> {{ selectedAcademy?.email }}</p>
                     <p><strong>Phone:</strong> {{ selectedAcademy?.phone }}</p>
-                    <p><strong>Website:</strong> <a :href="selectedAcademy?.website" target="_blank">{{
-                        selectedAcademy?.website }}</a></p>
+                    <p>
+                        <strong>Website:</strong>
+                        <a :href="selectedAcademy?.website" target="_blank">{{ selectedAcademy?.website }}</a>
+                    </p>
                 </q-card-section>
 
                 <q-separator />
@@ -47,6 +51,10 @@
                         <q-item v-for="program in programs" :key="program.id">
                             <q-item-section>
                                 <q-item-label><strong>{{ program.name }}</strong> ({{ program.sport }})</q-item-label>
+                                <q-item-label caption>
+                                    {{ formatDateRange(program.startDate, program.durationWeeks) }} •
+                                    ${{ program.price }} • Ages {{ program.ageGroup }}
+                                </q-item-label>
                                 <q-item-label caption>Coaches: {{ program.coaches.join(", ") }}</q-item-label>
                                 <q-item-label caption>
                                     Schedule:
@@ -76,7 +84,8 @@
             </q-card>
         </q-dialog>
 
-        <q-dialog v-model="programDialog">
+        <!-- Program Dialog -->
+        <q-dialog v-model="programDialog" persistent>
             <q-card class="q-pa-md" style="min-width: 500px;">
                 <q-card-section>
                     <h5>{{ isEditingProgram ? 'Edit Program' : 'Add New Program' }}</h5>
@@ -84,6 +93,28 @@
                     <q-input v-model="currentProgram.sport" label="Sport" dense outlined class="q-mb-md" />
                     <q-input v-model="currentProgram.coaches" label="Coaches (comma-separated)" dense outlined
                         class="q-mb-md" />
+
+                    <div class="row q-col-gutter-md">
+                        <div class="col-6">
+                            <q-input v-model="currentProgram.startDate" label="Start Date" type="date" dense outlined
+                                class="q-mb-md" />
+                        </div>
+                        <div class="col-6">
+                            <q-input v-model.number="currentProgram.durationWeeks" label="Duration (weeks)"
+                                type="number" min="1" dense outlined class="q-mb-md" />
+                        </div>
+                    </div>
+
+                    <div class="row q-col-gutter-md">
+                        <div class="col-6">
+                            <q-input v-model.number="currentProgram.price" label="Price" type="number" min="0" dense
+                                outlined class="q-mb-md" />
+                        </div>
+                        <div class="col-6">
+                            <q-select v-model="currentProgram.ageGroup" :options="ageGroupOptions" label="Age Group"
+                                dense outlined class="q-mb-md" />
+                        </div>
+                    </div>
 
                     <h6>Schedule</h6>
                     <div v-for="(day, index) in currentProgram.schedule" :key="index" class="q-mb-md">
@@ -102,6 +133,7 @@
             </q-card>
         </q-dialog>
 
+        <!-- Academy Edit Dialog -->
         <q-dialog v-model="academyEditDialog">
             <q-card class="q-pa-md" style="min-width: 400px;">
                 <q-card-section>
@@ -127,6 +159,7 @@
 <script>
 import { ref, computed, onMounted } from "vue";
 import { useAcademiesStore } from "src/stores/academyStore";
+import { date } from 'quasar';
 
 export default {
     setup() {
@@ -141,18 +174,37 @@ export default {
             name: "",
             sport: "",
             coaches: "",
-            schedule: []
+            schedule: [],
+            startDate: "",
+            durationWeeks: 4,
+            price: 0,
+            ageGroup: "8-12"
         });
         const isEditingAcademy = ref(false);
         const isEditingProgram = ref(false);
         const daysOfWeek = ref(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
-        const timeSlots = ref(["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]);
+        const timeSlots = ref([
+            "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
+            "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"
+        ]);
+        const ageGroupOptions = ref([
+            "3-5", "5-7", "7-9", "9-12",
+            "12-14", "14-16", "16-18", "18+"
+        ]);
 
         onMounted(() => {
             store.fetchAcademies();
         });
 
         const academyOptions = computed(() => store.academyOptions || []);
+
+        const formatDateRange = (startDate, weeks) => {
+            if (!startDate) return "No date set";
+            const start = new Date(startDate);
+            const end = new Date(start);
+            end.setDate(start.getDate() + (weeks * 7));
+            return `${date.formatDate(start, 'MMM D, YYYY')} - ${date.formatDate(end, 'MMM D, YYYY')}`;
+        };
 
         const openAcademyDetails = (academy) => {
             selectedAcademy.value = academy;
@@ -183,7 +235,11 @@ export default {
                 name: "",
                 sport: "",
                 coaches: "",
-                schedule: []
+                schedule: [],
+                startDate: "",
+                durationWeeks: 4,
+                price: 0,
+                ageGroup: "8-12"
             };
             isEditingProgram.value = false;
             programDialog.value = true;
@@ -193,7 +249,11 @@ export default {
             currentProgram.value = {
                 ...program,
                 coaches: program.coaches ? program.coaches.join(", ") : "",
-                schedule: program.schedule || []
+                schedule: program.schedule || [],
+                startDate: program.startDate || "",
+                durationWeeks: program.durationWeeks || 4,
+                price: program.price || 0,
+                ageGroup: program.ageGroup || "8-12"
             };
             isEditingProgram.value = true;
             programDialog.value = true;
@@ -211,16 +271,11 @@ export default {
         };
 
         const handleAcademySave = () => {
-            console.log("Current Academy Before Save/Update:", currentAcademy.value);
-
             if (isEditingAcademy.value) {
-                console.log("Updating Academy...");
                 store.updateAcademy(currentAcademy.value);
             } else {
-                console.log("Adding New Academy...");
                 store.addAcademy(currentAcademy.value);
             }
-
             academyEditDialog.value = false;
         };
 
@@ -228,7 +283,9 @@ export default {
             const program = {
                 ...currentProgram.value,
                 coaches: currentProgram.value.coaches.split(",").map(coach => coach.trim()),
-                schedule: currentProgram.value.schedule || []
+                schedule: currentProgram.value.schedule || [],
+                price: Number(currentProgram.value.price),
+                durationWeeks: Number(currentProgram.value.durationWeeks)
             };
 
             store.addProgram(selectedAcademy.value.id, program);
@@ -240,7 +297,9 @@ export default {
             const program = {
                 ...currentProgram.value,
                 coaches: currentProgram.value.coaches.split(",").map(coach => coach.trim()),
-                schedule: currentProgram.value.schedule || []
+                schedule: currentProgram.value.schedule || [],
+                price: Number(currentProgram.value.price),
+                durationWeeks: Number(currentProgram.value.durationWeeks)
             };
 
             store.updateProgram(selectedAcademy.value.id, program);
@@ -265,7 +324,9 @@ export default {
             isEditingProgram,
             daysOfWeek,
             timeSlots,
+            ageGroupOptions,
             academyOptions,
+            formatDateRange,
             openAcademyDetails,
             openAcademyDialog,
             deleteAcademy,
