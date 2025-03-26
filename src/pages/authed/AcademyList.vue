@@ -128,9 +128,9 @@ const getProgramsForSport = (academy, sport) => {
 };
 
 // Navigate to program details page
-const goToProgramDetails = (academyId, program) => {
+const goToProgramDetails = (academyId, program, programId) => {
     router.push({
-        path: `/booking/academy/${academyId}/program`,
+        path: `/booking/academy/${academyId}/program/${programId}`,
         query: {
             programName: program.name,
             sport: program.sport,

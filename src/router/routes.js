@@ -45,7 +45,7 @@ export default [
         component: () => import("src/pages/authed/AcademyDetails.vue")
       },
       {
-        path: '/booking/academy/:academyId/program',
+        path: '/booking/academy/:academyId/program/:programId',
         name: 'ProgramBooking',
         component: () => import('src/pages/authed/ProgramBookingPage.vue'),
         props: (route) => ({
