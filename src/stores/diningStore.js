@@ -15,7 +15,7 @@ export const useDiningStore = defineStore("diningStore", () => {
     const shops = ref([]);
     const productsByShop = ref({});
 
-    // Fetch all shops from Firestore
+    // 🔹 Fetch all shops from Firestore
     const fetchShops = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, "shops"));
@@ -33,7 +33,7 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    // Fetch products under a specific shop
+    // 🔹 Fetch products under a specific shop
     const fetchProducts = async (shopId) => {
         try {
             const querySnapshot = await getDocs(collection(db, `shops/${shopId}/products`));
@@ -44,81 +44,115 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    // Add a new shop
+    // 🔹 Upload image to Firebase Storage
+    const uploadImage = async (file, path) => {
+        try {
+            const storagePath = storageRef(storage, path);
+            const snapshot = await uploadBytes(storagePath, file);
+            return await getDownloadURL(snapshot.ref);
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            return null;
+        }
+    };
+
+    // 🔹 Add a new shop
     const addShop = async (shopData) => {
         try {
-            const docRef = await addDoc(collection(db, "shops"), shopData);
-            shopData.id = docRef.id; // Assign Firestore ID
-            shops.value.push(shopData);
-            console.log(`Shop added: ${shopData.name}`);
+            // Upload image first
+            let imageUrl = "";
+            if (shopData.imageFile) {
+                imageUrl = await uploadImage(shopData.imageFile, `shops/${shopData.imageFile.name}`);
+            }
+
+            const newShop = {
+                name: shopData.name,
+                deliveryTime: shopData.deliveryTime,
+                location: shopData.location,
+                image: imageUrl, // Store URL instead of file
+                rating: 0,
+            };
+
+            const docRef = await addDoc(collection(db, "shops"), newShop);
+            newShop.id = docRef.id; // Assign Firestore ID
+
+            shops.value.push(newShop);
+            console.log(`✅ Shop added: ${newShop.name}`);
         } catch (error) {
             console.error("Error adding shop:", error);
         }
     };
 
-    // Upload image to Firebase Storage
-    const uploadImage = async (file, path) => {
-        const storagePath = storageRef(storage, path);
-        await uploadBytes(storagePath, file);
-        return getDownloadURL(storagePath);
-    };
-
-    // Add a product under a shop
+    // 🔹 Add a product under a shop
     const addProduct = async (shopId, productData) => {
         try {
-            const docRef = await addDoc(collection(db, `shops/${shopId}/products`), productData);
-            productData.id = docRef.id; // Assign Firestore ID
+            let imageUrl = "";
+            if (productData.imageFile) {
+                imageUrl = await uploadImage(productData.imageFile, `products/${productData.imageFile.name}`);
+            }
+
+            const newProduct = {
+                name: productData.name,
+                price: productData.price,
+                description: productData.description,
+                image: imageUrl, // Store URL instead of file
+            };
+
+            const docRef = await addDoc(collection(db, `shops/${shopId}/products`), newProduct);
+            newProduct.id = docRef.id; // Assign Firestore ID
 
             if (!productsByShop.value[shopId]) {
                 productsByShop.value[shopId] = [];
             }
-            productsByShop.value[shopId].push(productData);
-            console.log(`Product added: ${productData.name}`);
+            productsByShop.value[shopId].push(newProduct);
+            console.log(`✅ Product added: ${newProduct.name}`);
         } catch (error) {
             console.error("Error adding product:", error);
         }
     };
 
-    // Update a shop
+    // 🔹 Update a shop
     const updateShop = async (shopId, updatedShopData) => {
         try {
             const shopRef = doc(db, "shops", shopId);
             await updateDoc(shopRef, updatedShopData);
-            shops.value = shops.value.map(shop => (shop.id === shopId ? updatedShopData : shop));
+            shops.value = shops.value.map(shop => (shop.id === shopId ? { ...shop, ...updatedShopData } : shop));
         } catch (error) {
             console.error("Error updating shop:", error);
         }
     };
 
-    // Update a product
+    // 🔹 Update a product
     const updateProduct = async (shopId, productId, updatedProductData) => {
         try {
             const productRef = doc(db, `shops/${shopId}/products`, productId);
             await updateDoc(productRef, updatedProductData);
             productsByShop.value[shopId] = productsByShop.value[shopId].map(product =>
-                product.id === productId ? updatedProductData : product
+                product.id === productId ? { ...product, ...updatedProductData } : product
             );
         } catch (error) {
             console.error("Error updating product:", error);
         }
     };
 
-    // Delete a shop
+    // 🔹 Delete a shop
     const deleteShop = async (shopId) => {
         try {
             await deleteDoc(doc(db, "shops", shopId));
             shops.value = shops.value.filter(shop => shop.id !== shopId);
             delete productsByShop.value[shopId]; // Remove its products as well
+            console.log("✅ Shop deleted successfully.");
         } catch (error) {
             console.error("Error deleting shop:", error);
         }
     };
 
-    // Delete a product
+    // 🔹 Delete a product
     const deleteProduct = async (shopId, productId) => {
         try {
             await deleteDoc(doc(db, `shops/${shopId}/products`, productId));
             productsByShop.value[shopId] = productsByShop.value[shopId].filter(product => product.id !== productId);
+            console.log("✅ Product deleted successfully.");
         } catch (error) {
             console.error("Error deleting product:", error);
         }

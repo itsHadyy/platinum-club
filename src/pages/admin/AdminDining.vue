@@ -93,14 +93,25 @@ import { useDiningStore } from "src/stores/diningStore";
 
 const store = useDiningStore();
 const shops = computed(() => store.shops);
-const products = computed(() => store.productsByShop);
+const addShopDialog = ref(false);
+
 const newShop = ref({ name: "", deliveryTime: "", location: "", imageFile: null });
 
+const openAddShopDialog = () => {
+    addShopDialog.value = true;
+};
+
 const saveShop = async () => {
-    if (newShop.value.imageFile) {
-        newShop.value.image = await store.uploadImage(newShop.value.imageFile, `shops/${newShop.value.imageFile.name}`);
+    if (!newShop.value.name || !newShop.value.deliveryTime || !newShop.value.location) {
+        console.error("⚠️ All fields are required!");
+        return;
     }
+
     await store.addShop(newShop.value);
+
+    // ✅ Close Dialog & Reset Form
+    addShopDialog.value = false;
+    newShop.value = { name: "", deliveryTime: "", location: "", imageFile: null };
 };
 
 onMounted(store.fetchShops);
