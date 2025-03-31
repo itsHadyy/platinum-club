@@ -76,7 +76,8 @@ export default [
       { path: 'bookings', component: () => import('src/pages/admin/AdminBookings.vue') },
       { path: 'courts', component: () => import('src/pages/admin/AdminCourts.vue') },
       { path: 'users', component: () => import('src/pages/admin/AdminUsers.vue') },
-      { path: 'academies', component: () => import('src/pages/admin/AdminAcademies.vue') }
+      { path: 'academies', component: () => import('src/pages/admin/AdminAcademies.vue') },
+      { path: 'dining', component: () => import('src/pages/admin/AdminDining.vue') },
     ]
   },
 

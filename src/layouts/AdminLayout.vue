@@ -17,31 +17,44 @@
           <q-item-section class="text-weight-bold">Dashboard</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/admin/bookings"
-          :class="{ 'bg-secondary text-primary': $route.path === '/admin/bookings' }">
-          <q-item-section avatar>
-            <q-icon name="event" />
-          </q-item-section>
-          <q-item-section class="text-weight-bold">Bookings</q-item-section>
-        </q-item>
+        <!-- Booking Section -->
+        <q-expansion-item expand-separator icon="event" label="Booking" default-opened>
+          <q-item clickable v-ripple to="/admin/bookings"
+            :class="{ 'bg-secondary text-primary': $route.path === '/admin/bookings' }">
+            <q-item-section avatar>
+              <q-icon name="event" />
+            </q-item-section>
+            <q-item-section class="text-weight-bold">Bookings</q-item-section>
+          </q-item>
 
-        <q-item clickable v-ripple to="/admin/courts"
-          :class="{ 'bg-secondary text-primary': $route.path === '/admin/courts' }">
-          <q-item-section avatar>
-            <q-icon name="sports_tennis" />
-          </q-item-section>
-          <q-item-section class="text-weight-bold">Manage Courts</q-item-section>
-        </q-item>
-        
-        <q-item clickable v-ripple to="/admin/academies"
-          :class="{ 'bg-secondary text-primary': $route.path === '/admin/academies' }">
-          <q-item-section avatar>
-            <q-icon name="sports" />
-          </q-item-section>
-          <q-item-section class="text-weight-bold">Manage Academies</q-item-section>
-        </q-item>
+          <q-item clickable v-ripple to="/admin/courts"
+            :class="{ 'bg-secondary text-primary': $route.path === '/admin/courts' }">
+            <q-item-section avatar>
+              <q-icon name="sports_tennis" />
+            </q-item-section>
+            <q-item-section class="text-weight-bold">Manage Courts</q-item-section>
+          </q-item>
 
-        <q-item clickable v-ripple to="/admin/users" :class="{ 'bg-secondary text-primary': $route.path === '/admin/users' }">
+          <q-item clickable v-ripple to="/admin/academies"
+            :class="{ 'bg-secondary text-primary': $route.path === '/admin/academies' }">
+            <q-item-section avatar>
+              <q-icon name="sports" />
+            </q-item-section>
+            <q-item-section class="text-weight-bold">Manage Academies</q-item-section>
+          </q-item>
+        </q-expansion-item>
+
+        <!-- Dining & Shopping Section -->
+          <q-item clickable v-ripple to="/admin/dining"
+            :class="{ 'bg-secondary text-primary': $route.path === '/admin/dining' }">
+            <q-item-section avatar>
+              <q-icon name="restaurant" />
+            </q-item-section>
+            <q-item-section class="text-weight-bold">Dining</q-item-section>
+          </q-item>
+
+        <q-item clickable v-ripple to="/admin/users"
+          :class="{ 'bg-secondary text-primary': $route.path === '/admin/users' }">
           <q-item-section avatar>
             <q-icon name="people" />
           </q-item-section>
@@ -67,9 +80,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { signOut, getAuth } from 'firebase/auth'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { signOut, getAuth } from 'firebase/auth';
 
 const router = useRouter();
 const auth = getAuth();
