@@ -14,6 +14,7 @@ import { uploadBytes, getDownloadURL, ref as storageRef } from "firebase/storage
 export const useDiningStore = defineStore("diningStore", () => {
     const shops = ref([]);
     const productsByShop = ref({});
+    const categories = ref([]);
 
     // 🔹 Fetch all shops from Firestore
     const fetchShops = async () => {
@@ -30,6 +31,24 @@ export const useDiningStore = defineStore("diningStore", () => {
             shops.value = shopData;
         } catch (error) {
             console.error("Error fetching shops:", error);
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "categories"));
+            categories.value = querySnapshot.docs.map(docSnap => docSnap.data().name);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
+
+    const addCategory = async (newCategory) => {
+        if (!categories.value.includes(newCategory)) {
+            categories.value.push(newCategory);
+    
+            // Optionally, store it in Firestore
+            await addDoc(collection(db, "categories"), { name: newCategory });
         }
     };
 
@@ -158,11 +177,17 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    onMounted(fetchShops);
+    onMounted(() => {
+        fetchShops();
+        fetchCategories();
+    });
 
     return {
         shops,
         productsByShop,
+        categories,
+        fetchCategories,
+        addCategory,
         fetchShops,
         fetchProducts,
         addShop,
