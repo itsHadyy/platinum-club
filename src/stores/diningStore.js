@@ -44,11 +44,14 @@ export const useDiningStore = defineStore("diningStore", () => {
     };
 
     const addCategory = async (newCategory) => {
-        if (!categories.value.includes(newCategory)) {
-            categories.value.push(newCategory);
+        try {
+            if (!categories.value.includes(newCategory)) {
+                categories.value.push(newCategory);
     
-            // Optionally, store it in Firestore
-            await addDoc(collection(db, "categories"), { name: newCategory });
+                await addDoc(collection(db, "categories"), { name: newCategory });
+            }
+        } catch (error) {
+            console.error("Error adding category:", error);
         }
     };
 

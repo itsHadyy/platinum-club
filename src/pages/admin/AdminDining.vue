@@ -35,7 +35,8 @@
                         @update:model-value="uploadImage" />
                 </q-card-section>
                 <q-card-actions align="right">
-                    <q-btn :label="editingShop ? 'Save' : 'Add Shop'" color="primary" @click="saveShop" />
+                    <q-btn :loading="loading" :disable="loading" :label="editingShop ? 'Save' : 'Add Shop'"
+                        color="primary" @click="saveShop" />
                     <q-btn label="Cancel" color="negative" v-close-popup />
                 </q-card-actions>
             </q-card>
@@ -59,7 +60,7 @@
                             <q-item-label caption>💰 {{ product.price }} EGP | 🏷️ {{ product.category }}</q-item-label>
                         </q-item-section>
                         <q-item-section side>
-                            <q-btn label="Edit" color="primary" @click="editProduct(product)" />
+                            <q-btn label="Edit" color="secondary" @click="editProduct(product)" />
                             <q-btn label="Delete" color="negative" flat @click="deleteProduct(product.id)" />
                         </q-item-section>
                     </q-item>
@@ -88,7 +89,8 @@
                         @update:model-value="uploadProductImage" />
                 </q-card-section>
                 <q-card-actions align="right">
-                    <q-btn :label="editingProduct ? 'Save' : 'Add Product'" color="primary" @click="saveProduct" />
+                    <q-btn :loading="loading" :disable="loading" :label="editingProduct ? 'Save' : 'Add Product'"
+                        color="secondary" @click="saveProduct" />
                     <q-btn label="Cancel" color="negative" v-close-popup />
                 </q-card-actions>
             </q-card>
@@ -115,6 +117,12 @@ const newProduct = ref({ name: "", price: "", description: "", category: "", ima
 const editingShop = ref(false);
 const editingProduct = ref(false);
 const products = ref([]);
+
+// ✅ Loading states (fix)
+const shopLoading = ref(false);
+const productLoading = ref(false);
+const deleteShopLoading = ref(false);
+const deleteProductLoading = ref(false);
 
 const openAddShopDialog = () => {
     newShop.value = { name: "", deliveryTime: "", location: "", imageFile: null };
@@ -149,36 +157,78 @@ const editProduct = (product) => {
 
 const addNewCategory = () => {
     const newCategory = prompt("Enter new category:");
-    if (newCategory && newCategory.trim()) { 
+    if (newCategory && newCategory.trim()) {
         store.addCategory(newCategory.trim());
     }
 };
 
+// ✅ Fixed Loading Issue in Save Shop
 const saveShop = async () => {
-    if (editingShop.value) {
-        await store.updateShop(newShop.value.id, newShop.value);
-    } else {
-        await store.addShop(newShop.value);
+    if (shopLoading.value) return;
+    shopLoading.value = true;
+
+    try {
+        if (editingShop.value) {
+            await store.updateShop(newShop.value.id, newShop.value);
+        } else {
+            await store.addShop(newShop.value);
+        }
+        shopDialog.value = false;
+    } catch (error) {
+        console.error("Error saving shop:", error);
+    } finally {
+        shopLoading.value = false;
     }
-    shopDialog.value = false;
 };
 
+// ✅ Fixed Loading Issue in Save Product
 const saveProduct = async () => {
-    if (editingProduct.value) {
-        await store.updateProduct(selectedShop.value.id, newProduct.value.id, newProduct.value);
-    } else {
-        await store.addProduct(selectedShop.value.id, newProduct.value);
+    if (productLoading.value) return;
+    productLoading.value = true;
+
+    try {
+        if (editingProduct.value) {
+            await store.updateProduct(selectedShop.value.id, newProduct.value.id, newProduct.value);
+        } else {
+            await store.addProduct(selectedShop.value.id, newProduct.value);
+        }
+        productDialog.value = false;
+    } catch (error) {
+        console.error("Error saving product:", error);
+    } finally {
+        productLoading.value = false;
     }
-    productDialog.value = false;
 };
 
+// ✅ Fixed Delete Shop Loading State
 const deleteShop = async (shopId) => {
-    await store.deleteShop(shopId);
+    if (deleteShopLoading.value) return;
+    deleteShopLoading.value = true;
+
+    try {
+        await store.deleteShop(shopId);
+    } catch (error) {
+        console.error("Error deleting shop:", error);
+    } finally {
+        deleteShopLoading.value = false;
+    }
 };
 
+// ✅ Fixed Delete Product Loading State
 const deleteProduct = async (productId) => {
-    await store.deleteProduct(selectedShop.value.id, productId);
-};
+    if (deleteProductLoading.value) return;
+    deleteProductLoading.value = true;
 
-onMounted(store.fetchShops);
+    try {
+        await store.deleteProduct(selectedShop.value.id, productId);
+    } catch (error) {
+        console.error("Error deleting product:", error);
+    } finally {
+        deleteProductLoading.value = false;
+    }
+};
+onMounted(async () => {
+    await store.fetchShops();
+    await store.fetchCategories();
+});
 </script>
