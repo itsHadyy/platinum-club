@@ -73,7 +73,7 @@ const linksList = [
   { title: 'Bookings', icon: 'sports_basketball', link: '/bookings-dashboard' },
   { title: 'Amenities', icon: 'volunteer_activism', link: '/' },
   { title: 'Wallet', icon: 'wallet', link: '/' },
-  { title: 'Dining', icon: 'dining', link: '/' },
+  { title: 'Dining', icon: 'dining', link: '/dining' },
   { title: 'Calendar', icon: 'event', link: '/' },
   { title: 'Help & Support', icon: 'help', link: '/' },
   { title: 'Conditions & Privacy', icon: 'local_library', link: '/' },

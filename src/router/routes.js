@@ -62,7 +62,11 @@ export default [
             levels: JSON.parse(route.query.levels || '[]')
           }
         })
-      }
+      },
+      {
+        path: '/dining',
+        component: () => import('src/pages/authed/DiningList.vue')
+      },
     ]
   },
 

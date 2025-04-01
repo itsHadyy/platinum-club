@@ -47,7 +47,7 @@ export const useDiningStore = defineStore("diningStore", () => {
         try {
             if (!categories.value.includes(newCategory)) {
                 categories.value.push(newCategory);
-    
+
                 await addDoc(collection(db, "categories"), { name: newCategory });
             }
         } catch (error) {
@@ -180,6 +180,31 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
+    const orders = ref([]);
+
+    const placeOrder = async (order) => {
+        try {
+            const docRef = await addDoc(collection(db, "orders"), order);
+            order.id = docRef.id;
+            orders.value.push(order);
+            console.log("✅ Order placed successfully");
+        } catch (error) {
+            console.error("Error placing order:", error);
+        }
+    };
+
+    const fetchUserOrders = async (userId) => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "orders"));
+            return querySnapshot.docs
+                .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+                .filter(order => order.userId === userId);
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+            return [];
+        }
+    };
+
     onMounted(() => {
         fetchShops();
         fetchCategories();
@@ -199,6 +224,8 @@ export const useDiningStore = defineStore("diningStore", () => {
         updateShop,
         updateProduct,
         deleteShop,
-        deleteProduct
+        deleteProduct,
+        placeOrder,
+        fetchUserOrders
     };
 });

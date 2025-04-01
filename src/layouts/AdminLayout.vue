@@ -18,7 +18,7 @@
         </q-item>
 
         <!-- Booking Section -->
-        <q-expansion-item expand-separator icon="event" label="Booking" >
+        <q-expansion-item expand-separator icon="event" label="Booking" default-opened>
           <q-item clickable v-ripple to="/admin/bookings"
             :class="{ 'bg-secondary text-primary': $route.path === '/admin/bookings' }">
             <q-item-section avatar>
