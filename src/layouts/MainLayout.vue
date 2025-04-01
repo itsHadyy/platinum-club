@@ -25,7 +25,6 @@
           :class="{'bg-secondary text-primary': $route.path === link.link}"
         />
 
-        <!-- Logout Button -->
         <q-item clickable @click="logout">
           <q-item-section avatar>
             <q-icon name="logout" />

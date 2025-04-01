@@ -9,13 +9,11 @@ import {
 } from "firebase/firestore";
 
 export const useAcademiesStore = defineStore("academiesStore", () => {
-    // State
     const academyOptions = ref([]);
     const programsByAcademy = ref({});
     const selectedAcademy = ref(null);
     const userBookings = ref([]);
 
-    // Actions
     const fetchAcademies = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, "academies"));
@@ -91,7 +89,6 @@ export const useAcademiesStore = defineStore("academiesStore", () => {
         }
     };
 
-    // Program Management
     const addProgram = async (academyId, program) => {
         try {
             const academyPrograms = programsByAcademy.value[academyId] || [];
@@ -133,7 +130,6 @@ export const useAcademiesStore = defineStore("academiesStore", () => {
 
     const createBooking = async (bookingData) => {
         try {
-            // Required fields validation
             const requiredFields = [
                 'academyId',
                 'programId',
@@ -156,7 +152,6 @@ export const useAcademiesStore = defineStore("academiesStore", () => {
                 ...bookingData,
                 createdAt: serverTimestamp(),
                 status: "confirmed",
-                // Ensure no undefined values
                 participantAge: bookingData.participantAge || null,
                 emergencyContactName: bookingData.emergencyContactName || bookingData.participantName,
                 emergencyContactPhone: bookingData.emergencyContactPhone || bookingData.participantPhone
@@ -206,7 +201,6 @@ export const useAcademiesStore = defineStore("academiesStore", () => {
         }
     };
 
-    // Helpers
     const getAcademiesBySport = (sport) => {
         return academyOptions.value.filter(academy => {
             return academy.programs?.some(program => program.sport === sport);
@@ -229,30 +223,22 @@ export const useAcademiesStore = defineStore("academiesStore", () => {
         }
     };
 
-    // Initialize
     onMounted(fetchAcademies);
 
     return {
-        // State
         academyOptions,
         programsByAcademy,
         selectedAcademy,
         userBookings,
-
-        // Academy Actions
         fetchAcademies,
         addAcademy,
         updateAcademy,
         deleteAcademy,
         fetchAcademyById,
         getAcademiesBySport,
-
-        // Program Actions
         addProgram,
         updateProgram,
         deleteProgram,
-
-        // Booking Actions
         createBooking,
         fetchUserBookings,
         cancelBooking

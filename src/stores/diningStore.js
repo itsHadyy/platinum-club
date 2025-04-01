@@ -16,7 +16,6 @@ export const useDiningStore = defineStore("diningStore", () => {
     const productsByShop = ref({});
     const categories = ref([]);
 
-    // 🔹 Fetch all shops from Firestore
     const fetchShops = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, "shops"));
@@ -25,7 +24,7 @@ export const useDiningStore = defineStore("diningStore", () => {
             for (const docSnap of querySnapshot.docs) {
                 const shop = { id: docSnap.id, ...docSnap.data() };
                 shopData.push(shop);
-                await fetchProducts(shop.id); // Fetch products for each shop
+                await fetchProducts(shop.id);
             }
 
             shops.value = shopData;
@@ -55,7 +54,6 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    // 🔹 Fetch products under a specific shop
     const fetchProducts = async (shopId) => {
         try {
             const querySnapshot = await getDocs(collection(db, `shops/${shopId}/products`));
@@ -66,7 +64,6 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    // 🔹 Upload image to Firebase Storage
     const uploadImage = async (file, path) => {
         try {
             const storagePath = storageRef(storage, path);
@@ -78,10 +75,8 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    // 🔹 Add a new shop
     const addShop = async (shopData) => {
         try {
-            // Upload image first
             let imageUrl = "";
             if (shopData.imageFile) {
                 imageUrl = await uploadImage(shopData.imageFile, `shops/${shopData.imageFile.name}`);
@@ -91,12 +86,12 @@ export const useDiningStore = defineStore("diningStore", () => {
                 name: shopData.name,
                 deliveryTime: shopData.deliveryTime,
                 location: shopData.location,
-                image: imageUrl, // Store URL instead of file
+                image: imageUrl, 
                 rating: 0,
             };
 
             const docRef = await addDoc(collection(db, "shops"), newShop);
-            newShop.id = docRef.id; // Assign Firestore ID
+            newShop.id = docRef.id; 
 
             shops.value.push(newShop);
             console.log(`✅ Shop added: ${newShop.name}`);
@@ -105,7 +100,6 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    // 🔹 Add a product under a shop
     const addProduct = async (shopId, productData) => {
         try {
             let imageUrl = "";
@@ -117,23 +111,22 @@ export const useDiningStore = defineStore("diningStore", () => {
                 name: productData.name,
                 price: productData.price,
                 description: productData.description,
-                image: imageUrl, // Store URL instead of file
+                image: imageUrl,
             };
 
             const docRef = await addDoc(collection(db, `shops/${shopId}/products`), newProduct);
-            newProduct.id = docRef.id; // Assign Firestore ID
+            newProduct.id = docRef.id; 
 
             if (!productsByShop.value[shopId]) {
                 productsByShop.value[shopId] = [];
             }
             productsByShop.value[shopId].push(newProduct);
-            console.log(`✅ Product added: ${newProduct.name}`);
+            console.log(`Product added: ${newProduct.name}`);
         } catch (error) {
             console.error("Error adding product:", error);
         }
     };
 
-    // 🔹 Update a shop
     const updateShop = async (shopId, updatedShopData) => {
         try {
             const shopRef = doc(db, "shops", shopId);
@@ -144,7 +137,6 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    // 🔹 Update a product
     const updateProduct = async (shopId, productId, updatedProductData) => {
         try {
             const productRef = doc(db, `shops/${shopId}/products`, productId);
@@ -157,19 +149,17 @@ export const useDiningStore = defineStore("diningStore", () => {
         }
     };
 
-    // 🔹 Delete a shop
     const deleteShop = async (shopId) => {
         try {
             await deleteDoc(doc(db, "shops", shopId));
             shops.value = shops.value.filter(shop => shop.id !== shopId);
-            delete productsByShop.value[shopId]; // Remove its products as well
+            delete productsByShop.value[shopId];
             console.log("✅ Shop deleted successfully.");
         } catch (error) {
             console.error("Error deleting shop:", error);
         }
     };
 
-    // 🔹 Delete a product
     const deleteProduct = async (shopId, productId) => {
         try {
             await deleteDoc(doc(db, `shops/${shopId}/products`, productId));

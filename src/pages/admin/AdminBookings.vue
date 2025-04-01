@@ -7,20 +7,16 @@
 
         <div class="text-h5 text-bold text-center q-mb-md">All Court Bookings</div>
 
-        <!-- Filters -->
         <q-card class="q-pa-md q-mb-md shadow-2">
             <q-card-section class="row q-gutter-md">
                 <q-input v-model="selectedDate" type="date" label="Filter by Date" outlined dense class="col" />
 
-                <!-- Sport Selection -->
                 <q-select v-model="selectedSport" :options="sportsOptions" label="Sport" outlined dense class="col"
                     emit-value map-options @update:model-value="updateCourtTypes" />
 
-                <!-- Court Type (Depends on Sport) -->
                 <q-select v-model="selectedCourtType" :options="courtTypes" label="Court Type" outlined dense
                     class="col" emit-value map-options @update:model-value="updateCourtNumbers" />
 
-                <!-- Court Number (Depends on Court Type) -->
                 <q-select v-model="selectedCourtNumber" :options="courtNumbers" label="Court Number" outlined dense
                     class="col" emit-value map-options />
 
@@ -28,7 +24,6 @@
             </q-card-section>
         </q-card>
 
-        <!-- Booking List -->
         <q-list bordered separator v-if="filteredBookings.length">
             <q-item v-for="booking in filteredBookings" :key="booking.id">
                 <q-item-section>
@@ -68,7 +63,7 @@ const selectedSport = ref(null);
 const selectedCourtType = ref(null);
 const selectedCourtNumber = ref(null);
 
-// Fetch all sports from Firebase
+
 const fetchSportsData = async () => {
     const sportsSnapshot = await getDocs(collection(db, "sportsCollection"));
     sportsOptions.value = sportsSnapshot.docs.map(doc => ({
@@ -76,27 +71,27 @@ const fetchSportsData = async () => {
     }));
 };
 
-// Update Court Types when Sport is selected
+
 const updateCourtTypes = () => {
     const sportData = sportsOptions.value.find(s => s.value === selectedSport.value);
     courtTypes.value = sportData ? sportData.courtTypes : [];
-    selectedCourtType.value = null; // Reset selection
-    courtNumbers.value = []; // Reset courts
+    selectedCourtType.value = null; 
+    courtNumbers.value = []; 
 };
 
-// Update Court Numbers when Court Type is selected
+
 const updateCourtNumbers = () => {
     const sportData = sportsOptions.value.find(s => s.value === selectedSport.value);
     courtNumbers.value = sportData && selectedCourtType.value ? sportData.courts[selectedCourtType.value] : [];
 };
 
-// Fetch all bookings
+
 const fetchAllBookings = async () => {
     const querySnapshot = await getDocs(collection(db, "courtBookings"));
     bookings.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
-// Computed: Filtered Bookings
+
 const filteredBookings = computed(() => {
     return bookings.value.filter(booking => {
         return (!selectedDate.value || booking.date === selectedDate.value) &&
@@ -106,7 +101,7 @@ const filteredBookings = computed(() => {
     });
 });
 
-// Reset filters
+
 const resetFilters = () => {
     selectedDate.value = null;
     selectedSport.value = null;
@@ -114,11 +109,11 @@ const resetFilters = () => {
     selectedCourtNumber.value = null;
 };
 
-// Cancel booking
+
 const cancelBooking = async (bookingId) => {
     if (confirm("Are you sure you want to cancel this booking?")) {
         await deleteDoc(doc(db, "courtBookings", bookingId));
-        fetchAllBookings(); // Refresh bookings
+        fetchAllBookings(); 
     }
 };
 

@@ -11,7 +11,7 @@ export const useQRStore = defineStore('qr', () => {
         const qrData = JSON.stringify({
             uid: user.uid,
             timestamp: Date.now(),
-            expiresIn: 30000, // Expires in 30 sec
+            expiresIn: 30000, 
             type: "user"
         });
 
@@ -20,10 +20,10 @@ export const useQRStore = defineStore('qr', () => {
     };
 
     const generateGuestQRCode = async () => {
-        const guestToken = Math.random().toString(36).substring(2, 10); // Random one-time code
+        const guestToken = Math.random().toString(36).substring(2, 10); 
         const qrData = JSON.stringify({
             token: guestToken,
-            expiresAt: Date.now() + 1800000, // Valid for 30 min
+            expiresAt: Date.now() + 1800000, 
             type: "guest"
         });
 

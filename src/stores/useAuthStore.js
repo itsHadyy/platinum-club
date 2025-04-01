@@ -41,13 +41,13 @@ export const useAuthStore = defineStore("auth", () => {
         };
 
         isAuthenticated.value = true;
-        localStorage.setItem("authUser", JSON.stringify(user.value)); // Save to localStorage
+        localStorage.setItem("authUser", JSON.stringify(user.value)); 
       } else {
         user.value = null;
         isAuthenticated.value = false;
         localStorage.removeItem("authUser");
       }
-      isAuthReady.value = true; // Ensure UI waits for auth state
+      isAuthReady.value = true; 
     });
   }
 

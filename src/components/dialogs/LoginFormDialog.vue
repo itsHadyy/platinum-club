@@ -53,11 +53,11 @@ const password = ref("");
 const authStore = useAuthStore();
 const router = useRouter();
 const errorMessage = ref("");
-const loading = ref(false); // Added loading state
+const loading = ref(false); 
 
 const login = async () => {
-    if (loading.value) return; // Prevent duplicate clicks
-    loading.value = true; // Start loading
+    if (loading.value) return; 
+    loading.value = true; 
 
     const auth = getAuth();
     const db = getFirestore();
@@ -66,7 +66,7 @@ const login = async () => {
         const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
         const user = userCredential.user;
 
-        // 🔹 Fetch user role from Firestore
+        
         const userDoc = await getDoc(doc(db, "users", user.uid));
 
         if (userDoc.exists()) {
@@ -77,13 +77,13 @@ const login = async () => {
                 role: userData.role
             });
 
-            // 🔹 Redirect based on role
+            
             if (userData.role === "admin") {
                 router.push("/admin");
             } else if (userData.role === "pending") {
-                await auth.signOut(); // 🔹 Log out pending users
+                await auth.signOut(); 
                 errorMessage.value = "Your account is pending approval. Please wait.";
-                router.push("/auth/login"); // 🔹 Redirect to login page
+                router.push("/auth/login"); 
             } else {
                 router.push("/");
             }
@@ -95,14 +95,14 @@ const login = async () => {
         console.error("Login failed:", error.message);
         errorMessage.value = "Invalid credentials. Please try again.";
     } finally {
-        loading.value = false; // Stop loading
+        loading.value = false; 
     }
 };
 
 const dialogVisible = ref(false);
 const open = () => {
     dialogVisible.value = true;
-    errorMessage.value = ""; // Clear previous errors
+    errorMessage.value = ""; 
 };
 
 const closeDialog = () => {

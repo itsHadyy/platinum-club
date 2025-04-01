@@ -12,7 +12,6 @@
       </div>
     </div>
 
-    <!-- Lazy-loaded login dialog -->
     <Suspense>
       <template #default>
         <LoginFormDialog ref="loginDialogRef" />
@@ -27,7 +26,7 @@
 <script setup>
 import { ref, defineAsyncComponent } from 'vue';
 
-// Lazy load the LoginFormDialog
+
 const LoginFormDialog = defineAsyncComponent(() =>
   import('src/components/dialogs/LoginFormDialog.vue')
 );

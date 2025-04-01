@@ -30,7 +30,6 @@
             </div>
         </div>
 
-        <!-- Academy Details Dialog -->
         <q-dialog v-model="academyDialog">
             <q-card class="q-pa-md" style="min-width: 500px;">
                 <q-card-section>
@@ -84,7 +83,6 @@
             </q-card>
         </q-dialog>
 
-        <!-- Program Dialog -->
         <q-dialog v-model="programDialog" persistent>
             <q-card class="q-pa-md" style="min-width: 500px;">
                 <q-card-section>
@@ -133,7 +131,6 @@
             </q-card>
         </q-dialog>
 
-        <!-- Academy Edit Dialog -->
         <q-dialog v-model="academyEditDialog">
             <q-card class="q-pa-md" style="min-width: 400px;">
                 <q-card-section>

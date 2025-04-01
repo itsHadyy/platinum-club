@@ -25,7 +25,7 @@ import { useGuestStore } from 'src/stores/useGuestStore';
 
 const guestStore = useGuestStore();
 const showDialog = ref(false);
-const emit = defineEmits(["guestInvited"]); // ✅ Define the event emitter
+const emit = defineEmits(["guestInvited"]); 
 
 const guest = ref({
     fullName: '',
@@ -43,7 +43,7 @@ async function handleInviteGuest() {
     try {
         const guestId = await guestStore.inviteGuest({ ...guest.value, createdAt: new Date() });
         showDialog.value = false;
-        emit("guestInvited", guestId); // ✅ Emit the event correctly
+        emit("guestInvited", guestId); 
     } catch (error) {
         console.error("Failed to invite guest:", error);
     }

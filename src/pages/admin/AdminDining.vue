@@ -22,7 +22,6 @@
             </q-item>
         </q-list>
 
-        <!-- Add/Edit Shop Dialog -->
         <q-dialog v-model="shopDialog">
             <q-card class="q-pa-md">
                 <q-card-section>
@@ -42,7 +41,6 @@
             </q-card>
         </q-dialog>
 
-        <!-- Manage Products Dialog -->
         <q-dialog v-model="manageProductsDialog">
             <q-card class="q-pa-md" style="min-width: 500px;">
                 <q-card-section>
@@ -68,7 +66,6 @@
             </q-card>
         </q-dialog>
 
-        <!-- Add/Edit Product Dialog -->
         <q-dialog v-model="productDialog">
             <q-card class="q-pa-md">
                 <q-card-section>
@@ -118,7 +115,6 @@ const editingShop = ref(false);
 const editingProduct = ref(false);
 const products = ref([]);
 
-// ✅ Loading states (fix)
 const shopLoading = ref(false);
 const productLoading = ref(false);
 const deleteShopLoading = ref(false);
@@ -162,7 +158,6 @@ const addNewCategory = () => {
     }
 };
 
-// ✅ Fixed Loading Issue in Save Shop
 const saveShop = async () => {
     if (shopLoading.value) return;
     shopLoading.value = true;
@@ -181,7 +176,6 @@ const saveShop = async () => {
     }
 };
 
-// ✅ Fixed Loading Issue in Save Product
 const saveProduct = async () => {
     if (productLoading.value) return;
     productLoading.value = true;
@@ -200,7 +194,6 @@ const saveProduct = async () => {
     }
 };
 
-// ✅ Fixed Delete Shop Loading State
 const deleteShop = async (shopId) => {
     if (deleteShopLoading.value) return;
     deleteShopLoading.value = true;
@@ -214,7 +207,6 @@ const deleteShop = async (shopId) => {
     }
 };
 
-// ✅ Fixed Delete Product Loading State
 const deleteProduct = async (productId) => {
     if (deleteProductLoading.value) return;
     deleteProductLoading.value = true;

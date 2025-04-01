@@ -17,7 +17,6 @@
           <q-item-section class="text-weight-bold">Dashboard</q-item-section>
         </q-item>
 
-        <!-- Booking Section -->
         <q-expansion-item expand-separator icon="event" label="Booking" default-opened>
           <q-item clickable v-ripple to="/admin/bookings"
             :class="{ 'bg-secondary text-primary': $route.path === '/admin/bookings' }">
@@ -44,7 +43,6 @@
           </q-item>
         </q-expansion-item>
 
-        <!-- Dining & Shopping Section -->
           <q-item clickable v-ripple to="/admin/dining"
             :class="{ 'bg-secondary text-primary': $route.path === '/admin/dining' }">
             <q-item-section avatar>
@@ -61,7 +59,6 @@
           <q-item-section class="text-weight-bold">Users</q-item-section>
         </q-item>
 
-        <!-- Logout Button -->
         <q-item clickable @click="logout">
           <q-item-section avatar>
             <q-icon name="logout" />

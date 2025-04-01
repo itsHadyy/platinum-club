@@ -50,7 +50,7 @@ export const useSportsStore = defineStore("sportsStore", () => {
         }
     };
 
-    // Add a court under a sport
+    
     const addCourt = async (sport, court) => {
         if (!courtsBySport.value[sport]) {
             courtsBySport.value[sport] = [];

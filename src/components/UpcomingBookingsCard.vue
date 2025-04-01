@@ -6,12 +6,10 @@
 
         <q-separator />
 
-        <!-- Show loading while fetching -->
         <q-inner-loading :showing="loading">
             <q-spinner size="40px" color="primary" />
         </q-inner-loading>
 
-        <!-- Display upcoming bookings -->
         <q-card-section v-if="upcomingBookings.length">
             <q-list separator>
                 <q-item v-for="booking in upcomingBookings" :key="booking.id" class="booking-item">
@@ -26,7 +24,6 @@
             </q-list>
         </q-card-section>
 
-        <!-- Empty state -->
         <q-card-section v-else class="empty-state">
             <q-icon name="event_busy" size="40px" color="grey-6" />
             <div class="text-grey q-mt-md">No upcoming bookings</div>
@@ -38,14 +35,14 @@ import { ref, computed, onMounted } from 'vue';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from 'boot/firebase';
 import { useAuthStore } from "src/stores/useAuthStore";
-import { useRouter } from 'vue-router'; // Import Vue Router
+import { useRouter } from 'vue-router'; 
 
 const myBookings = ref([]);
 const loading = ref(true);
 const userStore = useAuthStore();
-const router = useRouter(); // Initialize Vue Router
+const router = useRouter(); 
 
-// Fetch bookings from Firestore
+
 const fetchUserBookings = async () => {
     loading.value = true;
     try {
@@ -62,12 +59,12 @@ const fetchUserBookings = async () => {
     }
 };
 
-// Filter upcoming bookings
+
 const upcomingBookings = computed(() => {
     return myBookings.value.filter(booking => new Date(booking.date) >= new Date());
 });
 
-// Format the date
+
 const formatDate = (dateString) => {
     if (!dateString) return "Unknown";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -77,11 +74,11 @@ const formatDate = (dateString) => {
     });
 };
 
-// Redirect to "My Bookings" page
+
 const goToBookings = () => {
-    router.push('/my-bookings'); // Update with your actual route path
+    router.push('/my-bookings'); 
 };
 
-// Fetch bookings when component is mounted
+
 onMounted(fetchUserBookings);
 </script>

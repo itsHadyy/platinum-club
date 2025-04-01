@@ -14,12 +14,12 @@ const qrStore = useQRStore();
 const authStore = useAuthStore();
 
 onMounted(() => {
-    qrStore.generateQRCode(authStore.user); // Generate on page load
+    qrStore.generateQRCode(authStore.user); 
 });
 
 watchEffect(() => {
     setInterval(() => {
         qrStore.generateQRCode(authStore.user);
-    }, 30000); // Refresh QR code every 30 seconds
+    }, 30000); 
 });
 </script>
