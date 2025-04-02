@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { useAuthStore } from "./useAuthStore";
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { db } from "src/boot/firebase";
 
 export const useCartStore = defineStore("cart", {
@@ -50,8 +50,21 @@ export const useCartStore = defineStore("cart", {
                 if (!userId) throw new Error('User not authenticated');
                 if (this.cart.length === 0) throw new Error('Cart is empty');
 
+                // Fetch complete user data from Firestore
+                const userDoc = await getDoc(doc(db, "users", userId));
+                if (!userDoc.exists()) throw new Error('User data not found');
+
+                const userData = userDoc.data();
+                const fullName = `${userData.firstName} ${userData.middleName ? userData.middleName + ' ' : ''}${userData.lastName}`.trim();
+
                 const orderData = {
                     userId,
+                    userInfo: {
+                        fullName,
+                        email: userData.email,
+                        phone: userData.phone,
+                        nationalId: userData.nationalId || null // Include if available
+                    },
                     items: this.cart.map(item => ({
                         id: item.id,
                         name: item.name,
