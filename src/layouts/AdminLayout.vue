@@ -17,7 +17,7 @@
           <q-item-section class="text-weight-bold">Dashboard</q-item-section>
         </q-item>
 
-        <q-expansion-item expand-separator icon="event" label="Booking" default-opened>
+        <q-expansion-item expand-separator icon="event" label="Booking">
           <q-item clickable v-ripple to="/admin/bookings"
             :class="{ 'bg-secondary text-primary': $route.path === '/admin/bookings' }">
             <q-item-section avatar>

@@ -14,6 +14,8 @@
       <ServicesScroller />
 
       <UpcomingBookingsCard />
+
+      <TopRatedShops />
     </template>
   </div>
 </template>
@@ -23,12 +25,12 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from 'src/stores/useAuthStore';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import TopRatedShops from 'components/TopRatedShops.vue';
 
 import CarouselComponent from 'src/components/CarouselComponent.vue';
 import UpcomingBookingsCard from 'src/components/UpcomingBookingsCard.vue';
 import ServicesScroller from 'src/components/ServicesScroller.vue';
 
-// Firebase instances
 const auth = getAuth();
 const db = getFirestore();
 

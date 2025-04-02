@@ -85,7 +85,7 @@
 
                         <div v-if="!filteredProducts.length && !isFetchingProducts" class="text-center q-pa-md">
                             <q-icon name="fastfood" size="xl" />
-                            <p>No products available in this category</p>
+                            <p>No products available in this shop</p>
                         </div>
 
                         <q-inner-loading :showing="isFetchingProducts" />
