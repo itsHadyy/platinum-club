@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { useAuthStore } from "./useAuthStore";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
 import { db } from "src/boot/firebase";
 
 export const useCartStore = defineStore("cart", {
@@ -38,31 +38,58 @@ export const useCartStore = defineStore("cart", {
             this.cart = this.cart.filter(item => item.id !== productId);
         },
 
-        async placeOrder() {
-            if (this.cart.length === 0) return;
-
-            const authStore = useAuthStore();
-            if (!authStore.user) return;
-
-            const order = {
-                userId: authStore.user.id,
-                items: this.cart,
-                total: this.cartTotal,
-                status: "Pending",
-                createdAt: new Date(),
-            };
-
-            await addDoc(collection(db, "orders"), order);
+        clearCart() {
             this.cart = [];
+        },
+
+        async placeOrder() {
+            try {
+                const authStore = useAuthStore();
+                const userId = authStore.user?.uid;
+
+                if (!userId) throw new Error('User not authenticated');
+                if (this.cart.length === 0) throw new Error('Cart is empty');
+
+                const orderData = {
+                    userId,
+                    items: this.cart.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        price: Number(item.price),
+                        quantity: Number(item.quantity),
+                        image: item.image || null
+                    })),
+                    total: Number(this.cartTotal),
+                    status: "Pending",
+                    createdAt: serverTimestamp()
+                };
+
+                const orderRef = await addDoc(collection(db, "orders"), orderData);
+                this.clearCart();
+                return orderRef.id;
+            } catch (error) {
+                console.error("Order placement failed:", error);
+                throw error;
+            }
         },
 
         async fetchUserOrders() {
             const authStore = useAuthStore();
-            if (!authStore.user) return [];
+            if (!authStore.user?.uid) return [];
 
-            const q = query(collection(db, "orders"), where("userId", "==", authStore.user.id));
-            const querySnapshot = await getDocs(q);
-            return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            try {
+                const q = query(collection(db, "orders"), where("userId", "==", authStore.user.uid));
+                const querySnapshot = await getDocs(q);
+                return querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    // Convert Firestore timestamp to JS Date if needed
+                    createdAt: doc.data().createdAt?.toDate()
+                }));
+            } catch (error) {
+                console.error("Error fetching orders:", error);
+                throw error;
+            }
         },
     },
 });
