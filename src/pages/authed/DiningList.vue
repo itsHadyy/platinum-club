@@ -2,7 +2,7 @@
     <q-page class="q-pa-md">
         <h4 class="text-h5 text-bold">Dining & Shopping</h4>
 
-        <!-- Loading indicator for initial data load -->
+        <!-- Loading indicators -->
         <q-inner-loading :showing="isFetchingShops || isFetchingCategories" />
 
         <!-- Search & Sorting -->
@@ -22,8 +22,11 @@
                 </q-item-section>
                 <q-item-section>
                     <q-item-label class="text-bold">{{ shop.name }}</q-item-label>
-                    <q-item-label caption>🏠 {{ shop.location }} | ⭐ {{ shop.rating }} | ⏳ {{ shop.deliveryTime }}
-                        min</q-item-label>
+                    <q-item-label caption>
+                        🏠 {{ shop.location }} |
+                        ⭐ {{ shop.averageRating || 'No ratings' }} ({{ shop.reviewCount || 0 }}) |
+                        ⏳ {{ shop.deliveryTime }} min
+                    </q-item-label>
                 </q-item-section>
                 <q-inner-loading :showing="isFetchingProducts && selectedShop?.id === shop.id" />
             </q-item>
@@ -42,39 +45,81 @@
         </q-btn>
 
         <!-- Shop Dialog -->
-        <q-dialog v-model="shopDialog" @hide="selectedCategory = null">
+        <q-dialog v-model="shopDialog" @hide="resetShopDialog">
             <q-card class="q-pa-md full-width" style="max-width: 500px;">
                 <q-card-section>
                     <h5 class="text-h6 text-bold">{{ selectedShop?.name }}</h5>
+                    <div class="row items-center q-mb-sm">
+                        <q-rating v-model="selectedShop.averageRating" size="1.5em" readonly />
+                        <span class="q-ml-sm text-caption">({{ selectedShop.reviewCount || 0 }} reviews)</span>
+                    </div>
                 </q-card-section>
 
-                <q-select v-model="selectedCategory" :options="categories" label="Filter by Category" outlined dense
-                    class="q-mb-md" clearable :disable="isFetchingProducts" />
+                <q-tabs v-model="shopDialogTab" dense class="text-grey" active-color="primary">
+                    <q-tab name="products" label="Products" />
+                    <q-tab name="reviews" label="Reviews" />
+                </q-tabs>
 
-                <!-- Products List -->
-                <q-list bordered separator v-if="filteredProducts.length">
-                    <q-item v-for="product in filteredProducts" :key="product.id">
-                        <q-item-section avatar>
-                            <q-img :src="product.image" class="product-img" />
-                        </q-item-section>
-                        <q-item-section>
-                            <q-item-label class="text-bold">{{ product.name }}</q-item-label>
-                            <q-item-label caption>💰 {{ product.price }} EGP | 🏷️ {{ product.category }}</q-item-label>
-                        </q-item-section>
-                        <q-item-section side>
-                            <q-btn label="Add" color="secondary" dense @click="addToCart(product)"
-                                :loading="isUpdatingCart" :disable="isUpdatingCart" />
-                        </q-item-section>
-                    </q-item>
-                </q-list>
+                <q-tab-panels v-model="shopDialogTab" animated>
+                    <!-- Products Tab -->
+                    <q-tab-panel name="products">
+                        <q-select v-model="selectedCategory" :options="categories" label="Filter by Category" outlined
+                            dense class="q-mb-md" clearable :disable="isFetchingProducts" />
 
-                <!-- Empty products state -->
-                <div v-if="!filteredProducts.length && !isFetchingProducts" class="text-center q-pa-md">
-                    <q-icon name="fastfood" size="xl" />
-                    <p>No products available in this category</p>
-                </div>
+                        <q-list bordered separator v-if="filteredProducts.length">
+                            <q-item v-for="product in filteredProducts" :key="product.id">
+                                <q-item-section avatar>
+                                    <q-img :src="product.image" class="product-img" />
+                                </q-item-section>
+                                <q-item-section>
+                                    <q-item-label class="text-bold">{{ product.name }}</q-item-label>
+                                    <q-item-label caption>💰 {{ product.price }} EGP | 🏷️ {{ product.category
+                                    }}</q-item-label>
+                                </q-item-section>
+                                <q-item-section side>
+                                    <q-btn label="Add" color="secondary" dense @click="addToCart(product)"
+                                        :loading="isUpdatingCart" :disable="isUpdatingCart" />
+                                </q-item-section>
+                            </q-item>
+                        </q-list>
 
-                <q-inner-loading :showing="isFetchingProducts" />
+                        <div v-if="!filteredProducts.length && !isFetchingProducts" class="text-center q-pa-md">
+                            <q-icon name="fastfood" size="xl" />
+                            <p>No products available in this category</p>
+                        </div>
+
+                        <q-inner-loading :showing="isFetchingProducts" />
+                    </q-tab-panel>
+
+                    <!-- Reviews Tab -->
+                    <q-tab-panel name="reviews">
+                        <div v-if="reviews.length">
+                            <q-list bordered separator>
+                                <q-item v-for="review in reviews" :key="review.id">
+                                    <q-item-section>
+                                        <q-item-label class="text-bold">{{ review.userName }}</q-item-label>
+                                        <q-rating v-model="review.rating" size="1.5em" readonly />
+                                        <q-item-label caption>{{ formatDate(review.createdAt) }}</q-item-label>
+                                        <q-item-label>{{ review.comment }}</q-item-label>
+                                    </q-item-section>
+                                </q-item>
+                            </q-list>
+                        </div>
+                        <div v-else class="text-center q-pa-md">
+                            <p>No reviews yet</p>
+                        </div>
+
+                        <!-- Add Review Form -->
+                        <q-form @submit="submitReview" class="q-mt-md">
+                            <h6 class="text-h6">Add Your Review</h6>
+                            <q-rating v-model="newReview.rating" size="2em" :max="5" />
+                            <q-input v-model="newReview.comment" label="Your review" type="textarea" outlined
+                                class="q-mt-sm" :rules="[val => val.length <= 500 || 'Maximum 500 characters']" />
+                            <q-btn label="Submit Review" type="submit" color="primary" class="q-mt-md"
+                                :disable="!newReview.rating || newReview.comment.length > 500" />
+                        </q-form>
+                    </q-tab-panel>
+                </q-tab-panels>
             </q-card>
         </q-dialog>
 
@@ -104,7 +149,6 @@
                     </q-item>
                 </q-list>
 
-                <!-- Empty cart state -->
                 <div v-if="!cart.length" class="text-center q-pa-md">
                     <q-icon name="shopping_cart_off" size="xl" />
                     <p>Your cart is empty</p>
@@ -140,13 +184,33 @@
                     </q-item>
                 </q-list>
 
-                <!-- Empty orders state -->
                 <div v-if="!orders.length" class="text-center q-pa-md">
                     <q-icon name="receipt_long" size="xl" />
                     <p>No orders yet</p>
                 </div>
 
                 <q-inner-loading :showing="isFetchingOrders" />
+            </q-card>
+        </q-dialog>
+
+        <!-- Review Prompt Dialog -->
+        <q-dialog v-model="reviewPromptDialog" persistent>
+            <q-card class="q-pa-md" style="min-width: 350px">
+                <q-card-section>
+                    <h6 class="text-h6">How was your experience?</h6>
+                    <p>We'd love to hear your feedback about {{ lastOrderShop?.name }}</p>
+                </q-card-section>
+
+                <q-card-section class="q-pt-none">
+                    <q-rating v-model="newReview.rating" size="2em" :max="5" />
+                    <q-input v-model="newReview.comment" label="Your review (optional)" type="textarea" outlined
+                        class="q-mt-sm" :rules="[val => !val || val.length <= 500 || 'Maximum 500 characters']" />
+                </q-card-section>
+
+                <q-card-actions align="right">
+                    <q-btn flat label="Skip" color="negative" v-close-popup @click="resetReviewPrompt" />
+                    <q-btn flat label="Submit" color="primary" @click="submitReview" />
+                </q-card-actions>
             </q-card>
         </q-dialog>
     </q-page>
@@ -157,32 +221,49 @@ import { ref, computed, onMounted } from "vue";
 import { useQuasar } from 'quasar';
 import { useDiningStore } from "src/stores/diningStore";
 import { useCartStore } from "src/stores/cartStore";
+import { useAuthStore } from "src/stores/useAuthStore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
+import { db } from "src/boot/firebase";
 
 const $q = useQuasar();
 const diningStore = useDiningStore();
 const cartStore = useCartStore();
+const authStore = useAuthStore();
 
-// State variables
+
 const searchQuery = ref("");
 const sortBy = ref(null);
 const selectedCategory = ref(null);
 const shopDialog = ref(false);
+const shopDialogTab = ref("products");
 const cartDialog = ref(false);
 const ordersDialog = ref(false);
+const reviewPromptDialog = ref(false);
 const selectedShop = ref(null);
+const lastOrderShop = ref(null);
 const products = ref([]);
 const orders = ref([]);
+const reviews = ref([]);
 
-// Loading states
+
+const newReview = ref({
+    shopId: null,
+    rating: 0,
+    comment: '',
+});
+
+
 const isFetchingShops = ref(false);
 const isFetchingCategories = ref(false);
 const isFetchingProducts = ref(false);
+const isFetchingReviews = ref(false);
 const isUpdatingCart = ref(false);
 const isPlacingOrder = ref(false);
 const isFetchingOrders = ref(false);
 const isFetchingCart = ref(false);
+const isSubmittingReview = ref(false);
 
-// Computed properties
+
 const sortOptions = computed(() => ["Name", "Rating", "Delivery Time"]);
 const shops = computed(() => diningStore.shops);
 const categories = computed(() => diningStore.categories || []);
@@ -200,7 +281,7 @@ const filteredShops = computed(() =>
 const sortedShops = computed(() => {
     let sorted = [...filteredShops.value];
     if (sortBy.value === "Name") sorted.sort((a, b) => a.name.localeCompare(b.name));
-    if (sortBy.value === "Rating") sorted.sort((a, b) => b.rating - a.rating);
+    if (sortBy.value === "Rating") sorted.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
     if (sortBy.value === "Delivery Time") sorted.sort((a, b) => a.deliveryTime - b.deliveryTime);
     return sorted;
 });
@@ -209,17 +290,49 @@ const filteredProducts = computed(() =>
     selectedCategory.value ? products.value.filter(product => product.category === selectedCategory.value) : products.value
 );
 
-// Methods
+
+const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate();
+    return date.toLocaleDateString();
+};
+
+const resetShopDialog = () => {
+    selectedCategory.value = null;
+    products.value = [];
+    reviews.value = [];
+    newReview.value = {
+        shopId: null,
+        rating: 0,
+        comment: ''
+    };
+};
+
+const resetReviewPrompt = () => {
+    reviewPromptDialog.value = false;
+    lastOrderShop.value = null;
+    newReview.value = {
+        shopId: null,
+        rating: 0,
+        comment: ''
+    };
+};
+
 const selectShop = async (shop) => {
     selectedShop.value = shop;
+    newReview.value.shopId = shop.id;
     isFetchingProducts.value = true;
+    isFetchingReviews.value = true;
 
     try {
-        await diningStore.fetchProducts(shop.id);
+        await Promise.all([
+            diningStore.fetchProducts(shop.id),
+            fetchShopReviews(shop.id)
+        ]);
         products.value = diningStore.productsByShop[shop.id] || [];
         shopDialog.value = true;
     } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error loading shop data:", error);
         $q.notify({
             type: 'negative',
             message: "Failed to load shop details",
@@ -227,6 +340,114 @@ const selectShop = async (shop) => {
         });
     } finally {
         isFetchingProducts.value = false;
+        isFetchingReviews.value = false;
+    }
+};
+
+const calculateAverageRating = (reviews) => {
+    if (!reviews.length) return 0;
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    return (totalRating / reviews.length).toFixed(1); 
+};
+
+const fetchShopReviews = async (shopId) => {
+    try {
+        const q = query(collection(db, "shopReviews"), where("shopId", "==", shopId));
+        const querySnapshot = await getDocs(q);
+        const fetchedReviews = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt
+        }));
+
+        reviews.value = fetchedReviews;
+
+        
+        selectedShop.value.averageRating = calculateAverageRating(fetchedReviews);
+        selectedShop.value.reviewCount = fetchedReviews.length;
+    } catch (error) {
+        console.error("Error fetching reviews:", error);
+    }
+};
+
+const fetchAllShopReviews = async () => {
+    try {
+        const q = query(collection(db, "shopReviews"));
+        const querySnapshot = await getDocs(q);
+        const allReviews = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt
+        }));
+        
+        const reviewsByShop = {};
+        allReviews.forEach(review => {
+            if (!reviewsByShop[review.shopId]) {
+                reviewsByShop[review.shopId] = [];
+            }
+            reviewsByShop[review.shopId].push(review);
+        });
+        
+        diningStore.shops.forEach(shop => {
+            const shopReviews = reviewsByShop[shop.id] || [];
+            shop.averageRating = calculateAverageRating(shopReviews);
+            shop.reviewCount = shopReviews.length;
+        });
+    } catch (error) {
+        console.error("Error fetching all shop reviews:", error);
+    }
+};
+
+const submitReview = async () => {
+    isSubmittingReview.value = true;
+    try {
+        if (!authStore.user) {
+            throw new Error('Please login to submit a review');
+        }
+
+        const reviewData = {
+            shopId: newReview.value.shopId,
+            userId: authStore.user.uid,
+            userName: authStore.user.displayName || 'Anonymous',
+            rating: newReview.value.rating,
+            comment: newReview.value.comment,
+            createdAt: serverTimestamp()
+        };
+
+        await addDoc(collection(db, "shopReviews"), reviewData);
+
+        $q.notify({
+            type: 'positive',
+            message: 'Review submitted successfully!',
+            position: 'top'
+        });
+
+        
+        if (shopDialog.value) {
+            await fetchShopReviews(newReview.value.shopId);
+        }
+
+        
+        newReview.value = {
+            shopId: newReview.value.shopId,
+            rating: 0,
+            comment: ''
+        };
+
+        
+        if (reviewPromptDialog.value) {
+            reviewPromptDialog.value = false;
+            lastOrderShop.value = null;
+        }
+    } catch (error) {
+        console.error("Error submitting review:", error);
+        $q.notify({
+            type: 'negative',
+            message: error.message || 'Failed to submit review',
+            position: 'top'
+        });
+    } finally {
+        isSubmittingReview.value = false;
     }
 };
 
@@ -300,14 +521,30 @@ const placeOrder = async () => {
         }
 
         isPlacingOrder.value = true;
+
+        
+        const shopId = cart.value[0]?.shopId;
+
+        
         await cartStore.placeOrder();
 
-        cartDialog.value = false;
+        
         $q.notify({
             type: 'positive',
             message: "Order placed successfully!",
             position: 'top'
         });
+
+        
+        cartDialog.value = false;
+
+        
+        const shop = shops.value.find(s => s.id === shopId);
+        if (shop) {
+            lastOrderShop.value = shop;
+            newReview.value.shopId = shop.id;
+            reviewPromptDialog.value = true;
+        }
     } catch (error) {
         console.error("Order placement error:", error);
         $q.notify({
@@ -320,7 +557,6 @@ const placeOrder = async () => {
     }
 };
 
-// Lifecycle hooks
 onMounted(async () => {
     isFetchingShops.value = true;
     isFetchingCategories.value = true;
@@ -329,6 +565,8 @@ onMounted(async () => {
             diningStore.fetchShops(),
             diningStore.fetchCategories()
         ]);
+    
+        await fetchAllShopReviews();
     } catch (error) {
         console.error("Initialization error:", error);
         $q.notify({
@@ -344,7 +582,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Styles remain exactly the same */
 .shop-avatar {
     width: 50px;
     height: 50px;
