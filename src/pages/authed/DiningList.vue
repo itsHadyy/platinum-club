@@ -82,7 +82,7 @@
                                 <q-item-section>
                                     <q-item-label class="text-bold">{{ product.name }}</q-item-label>
                                     <q-item-label caption>💰 {{ product.price }} EGP | 🏷️ {{ product.category
-                                    }}</q-item-label>
+                                        }}</q-item-label>
                                 </q-item-section>
                                 <q-item-section side>
                                     <q-btn label="Add" color="secondary" dense @click="addToCart(product)"
@@ -163,6 +163,7 @@
                 </div>
 
                 <q-card-section v-if="cart.length">
+                    <div class="text-caption">Ordering from: {{ cart[0]?.shopName }}</div>
                     <strong>Total: 💰 {{ cartTotal }} EGP</strong>
                 </q-card-section>
 
@@ -176,6 +177,7 @@
             </q-card>
         </q-dialog>
 
+        <!-- Orders Dialog -->
         <!-- Orders Dialog -->
         <q-dialog v-model="ordersDialog">
             <q-card class="q-pa-md full-width" style="max-width: 600px;">
@@ -191,11 +193,17 @@
                 <q-card-section v-if="orders.length" class="q-pa-none">
                     <q-list bordered separator>
                         <q-item v-for="order in orders" :key="order.id" class="q-pa-sm">
+                            <q-item-section avatar>
+                                <q-avatar>
+                                    <q-img :src="order.shopImage" />
+                                </q-avatar>
+                            </q-item-section>
                             <q-item-section>
                                 <div class="row items-center">
                                     <div class="col">
-                                        <q-item-label class="text-bold">Order #{{ order.id }}</q-item-label>
+                                        <q-item-label class="text-bold">{{ order.shopName }}</q-item-label>
                                         <q-item-label caption>
+                                            🏠 {{ order.shopLocation }} •
                                             {{ formatDate(order.createdAt) }} •
                                             <q-badge :color="getStatusColor(order.status)">
                                                 {{ order.status }}
@@ -277,7 +285,7 @@ import { useQuasar } from 'quasar';
 import { useDiningStore } from "src/stores/diningStore";
 import { useCartStore } from "src/stores/cartStore";
 import { useAuthStore } from "src/stores/useAuthStore";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, orderBy } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, orderBy, getDoc } from "firebase/firestore";
 import { db } from "src/boot/firebase";
 
 const $q = useQuasar();
@@ -348,8 +356,25 @@ const filteredProducts = computed(() =>
 
 const formatDate = (timestamp) => {
     if (!timestamp) return '';
-    const date = timestamp.toDate();
-    return date.toLocaleDateString();
+
+    
+    if (timestamp.toDate) {
+        return timestamp.toDate().toLocaleDateString();
+    }
+    
+    else if (timestamp.seconds) {
+        return new Date(timestamp.seconds * 1000).toLocaleDateString();
+    }
+    
+    else if (timestamp instanceof Date) {
+        return timestamp.toLocaleDateString();
+    }
+    
+    else if (typeof timestamp === 'string') {
+        return new Date(timestamp).toLocaleDateString();
+    }
+
+    return 'Invalid date';
 };
 
 const resetShopDialog = () => {
@@ -509,7 +534,14 @@ const submitReview = async () => {
 const addToCart = async (product) => {
     isUpdatingCart.value = true;
     try {
-        cartStore.addToCart(product);
+        if (!selectedShop.value?.id) {
+            throw new Error('No shop selected');
+        }
+        console.log('Adding product with shopId:', selectedShop.value.id);
+        cartStore.addToCart({
+            ...product,
+            shopId: selectedShop.value.id 
+        }, selectedShop.value.id);
         $q.notify({
             type: 'positive',
             message: `${product.name} added to cart`,
@@ -519,7 +551,7 @@ const addToCart = async (product) => {
         console.error("Error adding to cart:", error);
         $q.notify({
             type: 'negative',
-            message: "Failed to add item to cart",
+            message: error.message || "Failed to add item to cart",
             position: 'top'
         });
     } finally {
@@ -625,19 +657,78 @@ const fetchOrders = async () => {
             where("userId", "==", authStore.user.uid),
             orderBy("createdAt", "desc")
         );
-        const querySnapshot = await getDocs(q);
-        orders.value = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt
+
+        const snapshot = await getDocs(q);
+        orders.value = await Promise.all(snapshot.docs.map(async doc => {
+            const data = doc.data();
+
+            const createdAt = data.createdAt
+                ? (data.createdAt.toDate ? data.createdAt.toDate()
+                    : new Date(data.createdAt.seconds * 1000))
+                : new Date();
+
+            let shopDetails = {};
+            if (data.shopId && !data.shopName) {
+                try {
+                    const shopDoc = await getDoc(doc(db, "shops", data.shopId));
+                    if (shopDoc.exists()) {
+                        shopDetails = {
+                            shopName: shopDoc.data().name,
+                            shopImage: shopDoc.data().image,
+                            shopLocation: shopDoc.data().location
+                        };
+                    }
+                } catch (shopError) {
+                    console.warn("Couldn't fetch shop details:", shopError);
+                }
+            }
+
+            return {
+                id: doc.id,
+                ...data,
+                ...shopDetails,
+                createdAt,
+                
+                shopName: data.shopName || shopDetails.shopName || "Unknown Shop",
+                shopImage: data.shopImage || shopDetails.shopImage || "",
+                shopLocation: data.shopLocation || shopDetails.shopLocation || ""
+            };
         }));
+
     } catch (error) {
-        console.error("Error fetching orders:", error);
-        $q.notify({
-            type: 'negative',
-            message: "Failed to load orders",
-            position: 'top'
-        });
+        console.error("Order fetch error:", error);
+        if (error.code === 'failed-precondition') {
+            
+            try {
+                const fallbackQuery = query(
+                    collection(db, "orders"),
+                    where("userId", "==", authStore.user.uid)
+                );
+                const snapshot = await getDocs(fallbackQuery);
+                orders.value = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    createdAt: doc.data().createdAt?.toDate() || new Date(),
+                    
+                    shopName: doc.data().shopName || "Unknown Shop",
+                    shopImage: doc.data().shopImage || "",
+                    shopLocation: doc.data().shopLocation || ""
+                })).sort((a, b) => b.createdAt - a.createdAt);
+            } catch (fallbackError) {
+                console.error("Fallback query failed:", fallbackError);
+                $q.notify({
+                    type: 'negative',
+                    message: "Failed to load orders",
+                    position: 'top'
+                });
+            }
+        } else {
+            $q.notify({
+                type: 'negative',
+                message: "Failed to load orders",
+                position: 'top'
+            });
+        }
     } finally {
         isFetchingOrders.value = false;
     }
@@ -663,7 +754,7 @@ onMounted(async () => {
 
         await fetchAllShopReviews();
 
-        // Fetch orders if user is authenticated
+        
         if (authStore.user) {
             await fetchOrders();
         }
