@@ -13,6 +13,20 @@
                 :disable="isFetchingShops" />
         </div>
 
+        <div class="fixed-bottom-right q-pa-md q-gutter-sm" style="z-index: 9999">
+            <!-- View Orders Button -->
+            <q-btn fab color="secondary" icon="receipt" @click="ordersDialog = true" class="orders-btn"
+                :loading="isFetchingOrders">
+                <q-badge v-if="orders.length" color="red" floating>{{ orders.length }}</q-badge>
+            </q-btn>
+
+            <!-- Cart Button -->
+            <q-btn fab color="secondary" icon="shopping_cart" @click="cartDialog = true" class="cart-btn"
+                :loading="isFetchingCart">
+                <q-badge v-if="cartItemCount" color="red" floating>{{ cartItemCount }}</q-badge>
+            </q-btn>
+        </div>
+
         <!-- Shops List -->
         <q-list bordered separator v-if="filteredShops.length">
             <q-item v-for="shop in sortedShops" :key="shop.id" clickable @click="selectShop(shop)"
@@ -37,12 +51,6 @@
             <q-icon name="search_off" size="xl" />
             <p>No shops found matching your search</p>
         </div>
-
-        <!-- Floating Cart Button -->
-        <q-btn fab color="secondary" icon="shopping_cart" @click="cartDialog = true" class="cart-btn"
-            :loading="isFetchingCart">
-            <q-badge v-if="cartItemCount" color="red" floating>{{ cartItemCount }}</q-badge>
-        </q-btn>
 
         <!-- Shop Dialog -->
         <q-dialog v-model="shopDialog" @hide="resetShopDialog">
@@ -170,24 +178,71 @@
 
         <!-- Orders Dialog -->
         <q-dialog v-model="ordersDialog">
-            <q-card class="q-pa-md full-width" style="max-width: 500px;">
+            <q-card class="q-pa-md full-width" style="max-width: 600px;">
                 <q-card-section>
-                    <h5 class="text-h6 text-bold">My Orders</h5>
+                    <div class="row items-center justify-between">
+                        <h5 class="text-h6 text-bold q-ma-none">My Orders</h5>
+                        <q-btn icon="refresh" flat round dense @click="fetchOrders" :loading="isFetchingOrders" />
+                    </div>
                 </q-card-section>
-                <q-list bordered separator v-if="orders.length">
-                    <q-item v-for="order in orders" :key="order.id">
-                        <q-item-section>
-                            <q-item-label class="text-bold">Order #{{ order.id }}</q-item-label>
-                            <q-item-label caption>Status: <strong>{{ order.status }}</strong></q-item-label>
-                            <q-item-label caption>Total: 💰 {{ order.total }} EGP</q-item-label>
-                        </q-item-section>
-                    </q-item>
-                </q-list>
 
-                <div v-if="!orders.length" class="text-center q-pa-md">
+                <q-separator />
+
+                <q-card-section v-if="orders.length" class="q-pa-none">
+                    <q-list bordered separator>
+                        <q-item v-for="order in orders" :key="order.id" class="q-pa-sm">
+                            <q-item-section>
+                                <div class="row items-center">
+                                    <div class="col">
+                                        <q-item-label class="text-bold">Order #{{ order.id }}</q-item-label>
+                                        <q-item-label caption>
+                                            {{ formatDate(order.createdAt) }} •
+                                            <q-badge :color="getStatusColor(order.status)">
+                                                {{ order.status }}
+                                            </q-badge>
+                                        </q-item-label>
+                                    </div>
+                                    <div class="col-auto text-right">
+                                        <q-item-label class="text-bold">💰 {{ order.total }} EGP</q-item-label>
+                                    </div>
+                                </div>
+
+                                <q-expansion-item v-if="order.items && order.items.length" label="Order Items"
+                                    class="q-mt-sm">
+                                    <q-card>
+                                        <q-card-section>
+                                            <q-list dense>
+                                                <q-item v-for="item in order.items" :key="item.id">
+                                                    <q-item-section avatar>
+                                                        <q-img :src="item.image" width="40px" height="40px" />
+                                                    </q-item-section>
+                                                    <q-item-section>
+                                                        <q-item-label>{{ item.name }}</q-item-label>
+                                                        <q-item-label caption>
+                                                            {{ item.quantity }} × {{ item.price }} EGP
+                                                        </q-item-label>
+                                                    </q-item-section>
+                                                    <q-item-section side>
+                                                        {{ (item.quantity * item.price).toFixed(2) }} EGP
+                                                    </q-item-section>
+                                                </q-item>
+                                            </q-list>
+                                        </q-card-section>
+                                    </q-card>
+                                </q-expansion-item>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+
+                <div v-else class="text-center q-pa-md">
                     <q-icon name="receipt_long" size="xl" />
                     <p>No orders yet</p>
                 </div>
+
+                <q-card-actions align="right">
+                    <q-btn label="Close" color="primary" v-close-popup />
+                </q-card-actions>
 
                 <q-inner-loading :showing="isFetchingOrders" />
             </q-card>
@@ -222,7 +277,7 @@ import { useQuasar } from 'quasar';
 import { useDiningStore } from "src/stores/diningStore";
 import { useCartStore } from "src/stores/cartStore";
 import { useAuthStore } from "src/stores/useAuthStore";
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, orderBy } from "firebase/firestore";
 import { db } from "src/boot/firebase";
 
 const $q = useQuasar();
@@ -347,7 +402,7 @@ const selectShop = async (shop) => {
 const calculateAverageRating = (reviews) => {
     if (!reviews.length) return 0;
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-    return (totalRating / reviews.length).toFixed(1); 
+    return (totalRating / reviews.length).toFixed(1);
 };
 
 const fetchShopReviews = async (shopId) => {
@@ -362,7 +417,7 @@ const fetchShopReviews = async (shopId) => {
 
         reviews.value = fetchedReviews;
 
-        
+
         selectedShop.value.averageRating = calculateAverageRating(fetchedReviews);
         selectedShop.value.reviewCount = fetchedReviews.length;
     } catch (error) {
@@ -379,7 +434,7 @@ const fetchAllShopReviews = async () => {
             ...doc.data(),
             createdAt: doc.data().createdAt
         }));
-        
+
         const reviewsByShop = {};
         allReviews.forEach(review => {
             if (!reviewsByShop[review.shopId]) {
@@ -387,7 +442,7 @@ const fetchAllShopReviews = async () => {
             }
             reviewsByShop[review.shopId].push(review);
         });
-        
+
         diningStore.shops.forEach(shop => {
             const shopReviews = reviewsByShop[shop.id] || [];
             shop.averageRating = calculateAverageRating(shopReviews);
@@ -422,19 +477,19 @@ const submitReview = async () => {
             position: 'top'
         });
 
-        
+
         if (shopDialog.value) {
             await fetchShopReviews(newReview.value.shopId);
         }
 
-        
+
         newReview.value = {
             shopId: newReview.value.shopId,
             rating: 0,
             comment: ''
         };
 
-        
+
         if (reviewPromptDialog.value) {
             reviewPromptDialog.value = false;
             lastOrderShop.value = null;
@@ -522,23 +577,23 @@ const placeOrder = async () => {
 
         isPlacingOrder.value = true;
 
-        
+
         const shopId = cart.value[0]?.shopId;
 
-        
+
         await cartStore.placeOrder();
 
-        
+
         $q.notify({
             type: 'positive',
             message: "Order placed successfully!",
             position: 'top'
         });
 
-        
+
         cartDialog.value = false;
 
-        
+
         const shop = shops.value.find(s => s.id === shopId);
         if (shop) {
             lastOrderShop.value = shop;
@@ -557,6 +612,46 @@ const placeOrder = async () => {
     }
 };
 
+const fetchOrders = async () => {
+    if (!authStore.user?.uid) {
+        orders.value = [];
+        return;
+    }
+
+    isFetchingOrders.value = true;
+    try {
+        const q = query(
+            collection(db, "orders"),
+            where("userId", "==", authStore.user.uid),
+            orderBy("createdAt", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        orders.value = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt
+        }));
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        $q.notify({
+            type: 'negative',
+            message: "Failed to load orders",
+            position: 'top'
+        });
+    } finally {
+        isFetchingOrders.value = false;
+    }
+};
+
+const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+        case 'completed': return 'positive';
+        case 'processing': return 'warning';
+        case 'cancelled': return 'negative';
+        default: return 'grey';
+    }
+};
+
 onMounted(async () => {
     isFetchingShops.value = true;
     isFetchingCategories.value = true;
@@ -565,8 +660,13 @@ onMounted(async () => {
             diningStore.fetchShops(),
             diningStore.fetchCategories()
         ]);
-    
+
         await fetchAllShopReviews();
+
+        // Fetch orders if user is authenticated
+        if (authStore.user) {
+            await fetchOrders();
+        }
     } catch (error) {
         console.error("Initialization error:", error);
         $q.notify({
@@ -595,9 +695,31 @@ onMounted(async () => {
 }
 
 .cart-btn {
-    position: absolute;
-    top: 10px;
+    position: relative;
+    margin-left: 10px;
+}
+
+.orders-btn {
+    position: relative;
+}
+
+.fixed-bottom-right {
+    position: fixed;
+    bottom: 20px;
     right: 20px;
-    z-index: 9999;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+/* Order items expansion */
+.q-expansion-item__content {
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+/* Status badges */
+.q-badge {
+    font-size: 0.75em;
+    padding: 2px 6px;
 }
 </style>
