@@ -43,6 +43,7 @@
           </q-item>
         </q-expansion-item>
 
+        <q-expansion-item expand-separator icon="restaurant" label="Dining & Shopping">
           <q-item clickable v-ripple to="/admin/dining"
             :class="{ 'bg-secondary text-primary': $route.path === '/admin/dining' }">
             <q-item-section avatar>
@@ -50,6 +51,16 @@
             </q-item-section>
             <q-item-section class="text-weight-bold">Dining</q-item-section>
           </q-item>
+
+          <q-item clickable v-ripple to="/admin/orders"
+            :class="{ 'bg-secondary text-primary': $route.path === '/admin/orders' }">
+            <q-item-section avatar>
+              <q-icon name="receipt" />
+            </q-item-section>
+            <q-item-section class="text-weight-bold">Orders</q-item-section>
+          </q-item>
+        </q-expansion-item>
+
 
         <q-item clickable v-ripple to="/admin/users"
           :class="{ 'bg-secondary text-primary': $route.path === '/admin/users' }">

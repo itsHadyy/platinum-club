@@ -82,6 +82,7 @@ export default [
       { path: 'users', component: () => import('src/pages/admin/AdminUsers.vue') },
       { path: 'academies', component: () => import('src/pages/admin/AdminAcademies.vue') },
       { path: 'dining', component: () => import('src/pages/admin/AdminDining.vue') },
+      { path: 'orders', component: () => import('src/pages/admin/AdminDiningOrders.vue') },
     ]
   },
 
