@@ -69,7 +69,6 @@ export const useCartStore = defineStore("cart", {
         },
 
         async placeOrder() {
-
             if (!this.validateCart()) {
                 throw new Error('Invalid cart state - shop information missing or inconsistent');
             }
@@ -84,60 +83,57 @@ export const useCartStore = defineStore("cart", {
                 const shopId = this.cart[0]?.shopId;
                 if (!shopId) throw new Error('Shop information missing');
                 
+                // Get user data
                 const userDoc = await getDoc(doc(db, "users", userId));
                 if (!userDoc.exists()) throw new Error('User data not found');
+                const userData = userDoc.data();
         
+                // Get shop data
                 const shopDoc = await getDoc(doc(db, "shops", shopId));
                 if (!shopDoc.exists()) throw new Error('Shop data not found');
-        
-                const userData = userDoc.data();
                 const shopData = shopDoc.data();
         
-                const fullName = `${userData.firstName} ${userData.middleName ? userData.middleName + ' ' : ''}${userData.lastName}`.trim();
-        
+                // Prepare order data with all necessary information
                 const orderData = {
+                    // User information
                     userId,
-                    userInfo: {
-                        fullName,
-                        email: userData.email,
-                        phone: userData.phone,
-                        nationalId: userData.nationalId || null
-                    },
-                    shopInfo: {
-                        id: shopId,
-                        name: shopData.name,
-                        image: shopData.image,
-                        location: shopData.location,
-                        contact: shopData.contact || null,
-                        averageRating: shopData.averageRating || null,
-                        deliveryTime: shopData.deliveryTime || null
-                    },
+                    userName: userData.fullName || `${userData.firstName || ''} ${userData.middleName || ''} ${userData.lastName || ''}`.trim(),
+                    userEmail: userData.email,
+                    userPhone: userData.phone,
+                    userNationalId: userData.nationalId,
+                    
+                    // Shop information
+                    shopId,
+                    shopName: shopData.name,
+                    shopImage: shopData.image,
+                    shopLocation: shopData.location,
+                    shopDeliveryTime: shopData.deliveryTime,
+                    
+                    // Order items
                     items: this.cart.map(item => ({
                         id: item.id,
                         name: item.name,
                         price: Number(item.price),
                         quantity: Number(item.quantity),
-                        image: item.image || null,
-                        category: item.category || null,
-                        shopId: item.shopId || null
+                        image: item.image,
+                        category: item.category
                     })),
+                    
+                    // Order metadata
                     total: Number(this.cartTotal),
                     status: "Pending",
-                    paymentMethod: "Cash on Delivery", 
-                    deliveryAddress: userData.address || null,
+                    paymentMethod: "Cash on Delivery",
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp()
                 };
         
+                // Add the order to Firestore
                 const orderRef = await addDoc(collection(db, "orders"), orderData);
                 this.clearCart();
                 
-                
                 return {
                     id: orderRef.id,
-                    ...orderData,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
+                    ...orderData
                 };
             } catch (error) {
                 console.error("Order placement failed:", error);

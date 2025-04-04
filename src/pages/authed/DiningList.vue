@@ -178,7 +178,6 @@
         </q-dialog>
 
         <!-- Orders Dialog -->
-        <!-- Orders Dialog -->
         <q-dialog v-model="ordersDialog">
             <q-card class="q-pa-md full-width" style="max-width: 600px;">
                 <q-card-section>
@@ -210,8 +209,13 @@
                                             </q-badge>
                                         </q-item-label>
                                     </div>
-                                    <div class="col-auto text-right">
+                                    <div class="col-auto text-right q-gutter-xs">
                                         <q-item-label class="text-bold">💰 {{ order.total }} EGP</q-item-label>
+                                        <q-btn v-if="canCancelOrder(order)" icon="cancel" color="negative" size="sm"
+                                            round flat @click="cancelOrder(order)" :loading="isCancellingOrder"
+                                            :disable="isCancellingOrder">
+                                            <q-tooltip>Cancel Order</q-tooltip>
+                                        </q-btn>
                                     </div>
                                 </div>
 
@@ -285,7 +289,7 @@ import { useQuasar } from 'quasar';
 import { useDiningStore } from "src/stores/diningStore";
 import { useCartStore } from "src/stores/cartStore";
 import { useAuthStore } from "src/stores/useAuthStore";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, orderBy, getDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, orderBy, getDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "src/boot/firebase";
 
 const $q = useQuasar();
@@ -307,7 +311,7 @@ const lastOrderShop = ref(null);
 const products = ref([]);
 const orders = ref([]);
 const reviews = ref([]);
-
+const isCancellingOrder = ref(false);
 
 const newReview = ref({
     shopId: null,
@@ -357,19 +361,19 @@ const filteredProducts = computed(() =>
 const formatDate = (timestamp) => {
     if (!timestamp) return '';
 
-    
+
     if (timestamp.toDate) {
         return timestamp.toDate().toLocaleDateString();
     }
-    
+
     else if (timestamp.seconds) {
         return new Date(timestamp.seconds * 1000).toLocaleDateString();
     }
-    
+
     else if (timestamp instanceof Date) {
         return timestamp.toLocaleDateString();
     }
-    
+
     else if (typeof timestamp === 'string') {
         return new Date(timestamp).toLocaleDateString();
     }
@@ -540,7 +544,7 @@ const addToCart = async (product) => {
         console.log('Adding product with shopId:', selectedShop.value.id);
         cartStore.addToCart({
             ...product,
-            shopId: selectedShop.value.id 
+            shopId: selectedShop.value.id
         }, selectedShop.value.id);
         $q.notify({
             type: 'positive',
@@ -688,7 +692,7 @@ const fetchOrders = async () => {
                 ...data,
                 ...shopDetails,
                 createdAt,
-                
+
                 shopName: data.shopName || shopDetails.shopName || "Unknown Shop",
                 shopImage: data.shopImage || shopDetails.shopImage || "",
                 shopLocation: data.shopLocation || shopDetails.shopLocation || ""
@@ -698,7 +702,7 @@ const fetchOrders = async () => {
     } catch (error) {
         console.error("Order fetch error:", error);
         if (error.code === 'failed-precondition') {
-            
+
             try {
                 const fallbackQuery = query(
                     collection(db, "orders"),
@@ -709,7 +713,7 @@ const fetchOrders = async () => {
                     id: doc.id,
                     ...doc.data(),
                     createdAt: doc.data().createdAt?.toDate() || new Date(),
-                    
+
                     shopName: doc.data().shopName || "Unknown Shop",
                     shopImage: doc.data().shopImage || "",
                     shopLocation: doc.data().shopLocation || ""
@@ -738,8 +742,55 @@ const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
         case 'completed': return 'positive';
         case 'processing': return 'warning';
+        case 'pending': return 'info';
         case 'cancelled': return 'negative';
         default: return 'grey';
+    }
+};
+
+const canCancelOrder = (order) => {
+    if (order.status !== 'Pending' && order.status !== 'Processing') {
+        return false;
+    }
+
+    const orderDate = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+    return orderDate >= thirtyMinutesAgo;
+};
+
+// Add this method to handle order cancellation
+const cancelOrder = async (order) => {
+    isCancellingOrder.value = true;
+    try {
+        // First verify the order can still be cancelled
+        if (!canCancelOrder(order)) {
+            throw new Error('This order can no longer be cancelled');
+        }
+
+        // Update the order status in Firestore
+        await updateDoc(doc(db, 'orders', order.id), {
+            status: 'Cancelled',
+            updatedAt: serverTimestamp()
+        });
+
+        $q.notify({
+            type: 'positive',
+            message: 'Order cancelled successfully',
+            position: 'top'
+        });
+
+        // Refresh the orders list
+        await fetchOrders();
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        $q.notify({
+            type: 'negative',
+            message: error.message || 'Failed to cancel order',
+            position: 'top'
+        });
+    } finally {
+        isCancellingOrder.value = false;
     }
 };
 
@@ -754,7 +805,7 @@ onMounted(async () => {
 
         await fetchAllShopReviews();
 
-        
+
         if (authStore.user) {
             await fetchOrders();
         }

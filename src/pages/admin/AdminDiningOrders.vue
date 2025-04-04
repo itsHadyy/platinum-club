@@ -249,7 +249,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
-import { collection, query, getDocs, orderBy, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, updateDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
 
 const $q = useQuasar();
@@ -435,14 +435,53 @@ const fetchAllOrders = async () => {
         const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
 
-        allOrders.value = querySnapshot.docs.map(doc => {
-            const data = doc.data();
+        allOrders.value = await Promise.all(querySnapshot.docs.map(async (orderDoc) => {
+            const data = orderDoc.data();
+
+            // Get user details from order's userInfo or fetch from users collection
+            let userDetails = data.userInfo || {};
+            if (data.userId && !userDetails.email) {
+                try {
+                    const userDocRef = doc(db, 'users', data.userId);
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        userDetails = userDocSnap.data();
+                    }
+                } catch (error) {
+                    console.error('Error fetching user details:', error);
+                }
+            }
+
+            // Get shop details if shopId exists
+            let shopDetails = {};
+            if (data.shopId) {
+                try {
+                    const shopDocRef = doc(db, 'shops', data.shopId);
+                    const shopDocSnap = await getDoc(shopDocRef);
+                    if (shopDocSnap.exists()) {
+                        shopDetails = shopDocSnap.data();
+                    }
+                } catch (error) {
+                    console.error('Error fetching shop details:', error);
+                }
+            }
+
             return {
-                id: doc.id,
+                id: orderDoc.id,
                 ...data,
-                createdAt: data.createdAt || serverTimestamp()
+                createdAt: data.createdAt?.toDate() || new Date(),
+                // User details
+                userName: userDetails.fullName ||
+                    `${userDetails.firstName || ''} ${userDetails.middleName || ''} ${userDetails.lastName || ''}`.trim() ||
+                    'Unknown User',
+                userEmail: userDetails.email || '',
+                userPhone: userDetails.phone || userDetails.phoneNumber || '',
+                // Shop details
+                shopName: shopDetails.name || data.shopName || 'Unknown Shop',
+                shopImage: shopDetails.image || data.shopImage || '',
+                shopLocation: shopDetails.location || data.shopLocation || ''
             };
-        });
+        }));
     } catch (error) {
         console.error('Error fetching orders:', error);
         $q.notify({
