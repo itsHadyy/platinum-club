@@ -39,7 +39,7 @@ export default defineConfig((ctx) => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
       target: {
-        browser: [ 'es2022', 'firefox115', 'chrome115', 'safari14' ],
+        browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
         node: 'node20'
       },
 
@@ -61,7 +61,7 @@ export default defineConfig((ctx) => {
 
       // extendViteConf (viteConf) {},
       // viteVuePluginOptions: {},
-      
+
       vitePlugins: [
         ['@intlify/unplugin-vue-i18n/vite', {
           // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
@@ -74,7 +74,7 @@ export default defineConfig((ctx) => {
           ssr: ctx.modeName === 'ssr',
 
           // you need to set i18n resource including paths !
-          include: [ fileURLToPath(new URL('./src/i18n', import.meta.url)) ]
+          include: [fileURLToPath(new URL('./src/i18n', import.meta.url))]
         }],
 
         ['vite-plugin-checker', {
@@ -103,7 +103,10 @@ export default defineConfig((ctx) => {
       // (like functional components as one of the examples),
       // you can manually specify Quasar components/directives to be available everywhere:
       //
-      // components: [],
+      components: [
+        'QDate',
+        'QPopupProxy',
+      ],
       // directives: [],
 
       // Quasar plugins
@@ -130,7 +133,7 @@ export default defineConfig((ctx) => {
     // https://v2.quasar.dev/quasar-cli-vite/developing-ssr/configuring-ssr
     ssr: {
       prodPort: 3000, // The default port that the production server should use
-                      // (gets superseded if process.env.PORT is specified at runtime)
+      // (gets superseded if process.env.PORT is specified at runtime)
 
       middlewares: [
         'render' // keep this as last one
@@ -182,7 +185,7 @@ export default defineConfig((ctx) => {
       // extendPackageJson (json) {},
 
       // Electron preload scripts (if any) from /src-electron, WITHOUT file extension
-      preloadScripts: [ 'electron-preload' ],
+      preloadScripts: ['electron-preload'],
 
       // specify the debugging port to use for the Electron app when running in development mode
       inspectPort: 5858,

@@ -83,33 +83,33 @@ export const useCartStore = defineStore("cart", {
                 const shopId = this.cart[0]?.shopId;
                 if (!shopId) throw new Error('Shop information missing');
                 
-                // Get user data
+                
                 const userDoc = await getDoc(doc(db, "users", userId));
                 if (!userDoc.exists()) throw new Error('User data not found');
                 const userData = userDoc.data();
         
-                // Get shop data
+                
                 const shopDoc = await getDoc(doc(db, "shops", shopId));
                 if (!shopDoc.exists()) throw new Error('Shop data not found');
                 const shopData = shopDoc.data();
         
-                // Prepare order data with all necessary information
+                
                 const orderData = {
-                    // User information
+                    
                     userId,
                     userName: userData.fullName || `${userData.firstName || ''} ${userData.middleName || ''} ${userData.lastName || ''}`.trim(),
                     userEmail: userData.email,
                     userPhone: userData.phone,
                     userNationalId: userData.nationalId,
                     
-                    // Shop information
+                    
                     shopId,
                     shopName: shopData.name,
                     shopImage: shopData.image,
                     shopLocation: shopData.location,
                     shopDeliveryTime: shopData.deliveryTime,
                     
-                    // Order items
+                    
                     items: this.cart.map(item => ({
                         id: item.id,
                         name: item.name,
@@ -119,7 +119,7 @@ export const useCartStore = defineStore("cart", {
                         category: item.category
                     })),
                     
-                    // Order metadata
+                    
                     total: Number(this.cartTotal),
                     status: "Pending",
                     paymentMethod: "Cash on Delivery",
@@ -127,7 +127,7 @@ export const useCartStore = defineStore("cart", {
                     updatedAt: serverTimestamp()
                 };
         
-                // Add the order to Firestore
+                
                 const orderRef = await addDoc(collection(db, "orders"), orderData);
                 this.clearCart();
                 

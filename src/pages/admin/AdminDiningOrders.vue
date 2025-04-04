@@ -254,7 +254,6 @@ import { db } from 'src/boot/firebase';
 
 const $q = useQuasar();
 
-// Data
 const allOrders = ref([]);
 const isLoading = ref(false);
 const isUpdatingStatus = ref(false);
@@ -262,13 +261,11 @@ const orderDialog = ref(false);
 const itemsDialog = ref(false);
 const selectedOrder = ref(null);
 
-// Filters
 const selectedShop = ref(null);
 const userFilter = ref('');
 const dateRange = ref({ from: null, to: null });
 const selectedStatus = ref(null);
 
-// Columns for the table
 const columns = [
     {
         name: 'id',
@@ -327,7 +324,6 @@ const columns = [
     }
 ];
 
-// Pagination
 const pagination = ref({
     sortBy: 'date',
     descending: true,
@@ -335,10 +331,8 @@ const pagination = ref({
     rowsPerPage: 10
 });
 
-// Status options
 const statusOptions = ['Pending', 'Processing', 'Completed', 'Cancelled'];
 
-// Computed properties
 const shopOptions = computed(() => {
     const shops = new Set();
     allOrders.value.forEach(order => {
@@ -357,12 +351,10 @@ const dateRangeText = computed(() => {
 
 const filteredOrders = computed(() => {
     return allOrders.value.filter(order => {
-        // Filter by shop
         if (selectedShop.value && order.shopName !== selectedShop.value) {
             return false;
         }
 
-        // Filter by user (email or phone)
         if (userFilter.value) {
             const searchTerm = userFilter.value.toLowerCase();
             const userEmail = order.userEmail?.toLowerCase() || '';
@@ -376,12 +368,10 @@ const filteredOrders = computed(() => {
             }
         }
 
-        // Filter by status
         if (selectedStatus.value && order.status !== selectedStatus.value) {
             return false;
         }
 
-        // Filter by date range
         if (dateRange.value.from || dateRange.value.to) {
             const orderDate = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
             const fromDate = dateRange.value.from ? new Date(dateRange.value.from) : null;
@@ -395,7 +385,6 @@ const filteredOrders = computed(() => {
     });
 });
 
-// Methods
 const formatDate = (date) => {
     if (!date) return '';
 
@@ -421,10 +410,6 @@ const getStatusColor = (status) => {
     }
 };
 
-const applyDateFilter = () => {
-    // The date picker already updates the dateRange ref
-};
-
 const clearDateFilter = () => {
     dateRange.value = { from: null, to: null };
 };
@@ -438,7 +423,6 @@ const fetchAllOrders = async () => {
         allOrders.value = await Promise.all(querySnapshot.docs.map(async (orderDoc) => {
             const data = orderDoc.data();
 
-            // Get user details from order's userInfo or fetch from users collection
             let userDetails = data.userInfo || {};
             if (data.userId && !userDetails.email) {
                 try {
@@ -452,7 +436,6 @@ const fetchAllOrders = async () => {
                 }
             }
 
-            // Get shop details if shopId exists
             let shopDetails = {};
             if (data.shopId) {
                 try {
@@ -470,13 +453,11 @@ const fetchAllOrders = async () => {
                 id: orderDoc.id,
                 ...data,
                 createdAt: data.createdAt?.toDate() || new Date(),
-                // User details
                 userName: userDetails.fullName ||
                     `${userDetails.firstName || ''} ${userDetails.middleName || ''} ${userDetails.lastName || ''}`.trim() ||
                     'Unknown User',
                 userEmail: userDetails.email || '',
                 userPhone: userDetails.phone || userDetails.phoneNumber || '',
-                // Shop details
                 shopName: shopDetails.name || data.shopName || 'Unknown Shop',
                 shopImage: shopDetails.image || data.shopImage || '',
                 shopLocation: shopDetails.location || data.shopLocation || ''
@@ -522,7 +503,6 @@ const updateOrderStatus = async () => {
             message: 'Order status updated successfully'
         });
 
-        // Refresh the orders list
         await fetchAllOrders();
     } catch (error) {
         console.error('Error updating order status:', error);
@@ -535,7 +515,6 @@ const updateOrderStatus = async () => {
     }
 };
 
-// Lifecycle hooks
 onMounted(() => {
     fetchAllOrders();
 });
